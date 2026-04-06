@@ -789,7 +789,6 @@ function renderStatData(allTxs){
 }
 
 /* INSTALL & UPDATE */
-const SW_VERSION='1.0.0';
 let _deferredInstall=null;
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();_deferredInstall=e;
@@ -807,7 +806,21 @@ function initInstallUI(){
     document.getElementById('installedRow').style.display='flex';
     document.getElementById('installRow').style.display='none';
   }
-  document.getElementById('swVerTxt').textContent=`目前版本：${SW_VERSION}`;
+  // 從 SW 動態讀取版本號
+  if('serviceWorker' in navigator){
+    caches.keys().then(keys=>{
+      const k=keys.find(k=>k.startsWith('ledger-'));
+      if(k){const v=k.replace('ledger-','');document.getElementById('swVerTxt').textContent=`目前版本：${v}`;}
+    });
+    // 監聽 SW 更新，自動 reload
+    navigator.serviceWorker.addEventListener('message',e=>{
+      if(e.data?.type==='SW_UPDATED'){
+        document.getElementById('swVerTxt').textContent=`目前版本：${e.data.version}`;
+        toast('App 已更新，重新載入中…','success');
+        setTimeout(()=>location.reload(),1500);
+      }
+    });
+  }
 }
 async function installApp(){
   if(!_deferredInstall){toast('請使用瀏覽器「加入主畫面」功能','');return;}
