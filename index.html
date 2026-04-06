@@ -383,12 +383,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--noto);min-height:1
 <!-- NEW GOAL DRAWER -->
 <div class="overlay" id="goalOv">
  <div class="drawer">
-  <div class="dh"></div><div class="dtitle">新增存錢目標</div>
+  <div class="dh"></div><div class="dtitle" id="goalOvTitle">新增存錢目標</div>
   <div class="fg"><label class="flbl">目標名稱</label><input class="finp" id="gName" type="text" placeholder="例：旅遊基金、新電腦…"></div>
   <div class="fg"><label class="flbl">選擇圖示</label><div class="ep-row" id="epRow"></div></div>
   <div class="fg"><label class="flbl">目標金額（USD）</label><input class="finp" id="gTarget" type="number" placeholder="0.00" min="0" step="any"></div>
   <div class="fg"><label class="flbl">備註（選填）</label><input class="finp" id="gNote" type="text" placeholder="存錢計畫…"></div>
-  <button class="fsub" onclick="subGoal()">建立目標</button>
+  <button class="fsub" id="goalOvBtn" onclick="subGoal()">建立目標</button>
  </div>
 </div>
 
@@ -654,7 +654,10 @@ function renderGoals(){
     return`<div class="goal-card" style="animation-delay:${gi*.06}s">
       <div class="goal-top">
         <div class="goal-icon-name"><div class="goal-ico" style="background:${bg}">${g.emoji||'🎯'}</div><div><div class="goal-name">${g.name}</div>${dlTxt?`<div class="goal-dl">${dlTxt}</div>`:''}${g.note?`<div class="goal-dl">${g.note}</div>`:''}</div></div>
-        ${done?`<span class="done-badge">✓ 達成！</span>`:`<button class="goal-del-btn" onclick="delGoal('${g.id}')">×</button>`}
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="goal-del-btn" style="font-size:14px" onclick="openEditGoal('${g.id}')">✎</button>
+          ${done?`<span class="done-badge">✓ 達成！</span>`:`<button class="goal-del-btn" onclick="delGoal('${g.id}')">×</button>`}
+        </div>
       </div>
       <div class="goal-prog-row"><div class="goal-pct">${pct}%</div><div class="goal-amts">$${saved.toFixed(2)} / $${(g.target||0).toFixed(2)}</div></div>
       <div class="prog-track"><div class="prog-fill ${fc}" style="width:${pct}%"></div></div>
@@ -677,15 +680,35 @@ function buildEmojiPicker(){
 function pickEmo(e){S.selEmo=e;document.querySelectorAll('.ep').forEach(el=>el.classList.toggle('active',el.textContent===e));}
 
 function openNewGoal(){
-  S.selEmo='🎯';buildEmojiPicker();
+  S.selEmo='🎯';S._editGid=null;buildEmojiPicker();
   ['gName','gTarget','gNote'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('goalOvTitle').textContent='新增存錢目標';
+  document.getElementById('goalOvBtn').textContent='建立目標';
   const o=document.getElementById('goalOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
 }
 function subGoal(){
   const name=document.getElementById('gName').value.trim(),target=parseFloat(document.getElementById('gTarget').value);
   if(!name){toast('請填入目標名稱','error');return;}if(!target||target<=0){toast('請填入目標金額','error');return;}
-  S.goals.push({id:'g'+Date.now(),name,emoji:S.selEmo,target,note:document.getElementById('gNote').value.trim(),deposits:[],createdAt:new Date().toISOString()});
-  saveGoals();document.getElementById('goalOv').classList.remove('open');renderGoals();toast('目標已建立 ✓','success');
+  const note=document.getElementById('gNote').value.trim();
+  if(S._editGid){
+    const g=S.goals.find(x=>x.id===S._editGid);
+    if(g){g.name=name;g.emoji=S.selEmo;g.target=target;g.note=note;}
+    saveGoals();document.getElementById('goalOv').classList.remove('open');renderGoals();toast('目標已更新 ✓','success');
+  }else{
+    S.goals.push({id:'g'+Date.now(),name,emoji:S.selEmo,target,note,deposits:[],createdAt:new Date().toISOString()});
+    saveGoals();document.getElementById('goalOv').classList.remove('open');renderGoals();toast('目標已建立 ✓','success');
+  }
+  S._editGid=null;
+}
+function openEditGoal(gid){
+  const g=S.goals.find(x=>x.id===gid);if(!g)return;
+  S._editGid=gid;S.selEmo=g.emoji||'🎯';buildEmojiPicker();
+  document.getElementById('gName').value=g.name||'';
+  document.getElementById('gTarget').value=g.target||'';
+  document.getElementById('gNote').value=g.note||'';
+  document.getElementById('goalOvTitle').textContent='編輯目標';
+  document.getElementById('goalOvBtn').textContent='儲存變更';
+  const o=document.getElementById('goalOv');o.classList.add('open');o.onclick=e=>{if(e.target===o){o.classList.remove('open');S._editGid=null;}};
 }
 
 function openDep(gid){
