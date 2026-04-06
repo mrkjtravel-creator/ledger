@@ -315,7 +315,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--noto);min-height:1
    <div class="sett-page">
     <div style="font-size:22px;font-family:var(--sora);font-weight:700;margin-bottom:24px">設定</div>
     <div class="sett-group"><div class="sett-gtitle">Apps Script API</div><div class="sett-card"><input class="api-inp" id="apiInp" type="url" placeholder="https://script.google.com/macros/s/…" oninput="saveApi()"></div></div>
-    <div class="sett-group"><div class="sett-gtitle">匯率（兌 USD）</div><div class="sett-card"><div class="sett-row"><div><div class="sett-rlabel">KHR 瑞爾</div><div class="sett-rsub">1 USD = ? KHR</div></div><input class="rate-inp" id="rKHR" type="number" placeholder="4100"></div><div class="sett-row"><div><div class="sett-rlabel">TWD 台幣</div><div class="sett-rsub">1 USD = ? TWD</div></div><input class="rate-inp" id="rTWD" type="number" placeholder="32"></div></div><button class="sett-save-btn" onclick="saveRates()">更新匯率到雲端</button></div>
+    <div class="sett-group"><div class="sett-gtitle">匯率（兌 USD）</div><div class="sett-card"><div class="sett-row"><div><div class="sett-rlabel">KHR 瑞爾</div><div class="sett-rsub" id="rKHRsub">1 USD = ? KHR</div></div><input class="rate-inp" id="rKHR" type="number" placeholder="4100"></div><div class="sett-row"><div><div class="sett-rlabel">TWD 台幣</div><div class="sett-rsub" id="rTWDsub">1 USD = ? TWD</div></div><input class="rate-inp" id="rTWD" type="number" placeholder="32"></div></div><button class="sett-save-btn" onclick="saveRates()">更新匯率到雲端</button></div>
     <div class="sett-group">
      <div class="sett-gtitle">應用程式</div>
      <div class="sett-card">
@@ -474,8 +474,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('depDate').value=now.toISOString().split('T')[0];
   document.getElementById('apiInp').value=API;
   const khr=localStorage.getItem('rKHR'),twd=localStorage.getItem('rTWD');
-  if(khr){S.rates.KHR=1/+khr;document.getElementById('rKHR').value=khr;}
-  if(twd){S.rates.TWD=1/+twd;document.getElementById('rTWD').value=twd;}
+  if(khr){S.rates.KHR=1/+khr;document.getElementById('rKHR').value=khr;document.getElementById('rKHRsub').textContent='1 USD = '+khr+' KHR';}
+  if(twd){S.rates.TWD=1/+twd;document.getElementById('rTWD').value=twd;document.getElementById('rTWDsub').textContent='1 USD = '+twd+' TWD';}
   S.goals=JSON.parse(localStorage.getItem(GK)||'[]');
   S.accounts=JSON.parse(localStorage.getItem(ACCK)||'null')||[
     {id:'personal',name:'個人',emoji:'👤',sub:'生活支出',catType:'personal',color:'#eff4ff'},
@@ -613,7 +613,8 @@ async function subTx(){
 function saveApi(){API=document.getElementById('apiInp').value.trim();localStorage.setItem(AK,API);}
 async function saveRates(){
   const khr=+document.getElementById('rKHR').value,twd=+document.getElementById('rTWD').value;
-  if(khr){S.rates.KHR=1/khr;localStorage.setItem('rKHR',khr);}if(twd){S.rates.TWD=1/twd;localStorage.setItem('rTWD',twd);}
+  if(khr){S.rates.KHR=1/khr;localStorage.setItem('rKHR',khr);document.getElementById('rKHRsub').textContent='1 USD = '+khr+' KHR';}
+  if(twd){S.rates.TWD=1/twd;localStorage.setItem('rTWD',twd);document.getElementById('rTWDsub').textContent='1 USD = '+twd+' TWD';}
   if(!API){toast('匯率已儲存（本地）','success');return;}
   try{const u=[];if(khr)u.push({currency:'KHR',rate:1/khr});if(twd)u.push({currency:'TWD',rate:1/twd});await apiP({action:'updateRates',data:u});toast('匯率已更新 ✓','success');}
   catch{toast('本地已儲存，雲端失敗','error');}
