@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f5f5f0">
+<title>帳本</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f5f0;--white:#fff;--black:#111;--border:#e8e8e0;--text:#111;--muted:#999990;--muted2:#c8c8c0;--green:#1aad5e;--green-bg:#e8f7ee;--red:#e03535;--blue:#2563eb;--blue-bg:#eff4ff;--orange:#f07c00;--gold:#f59e0b;--sora:'Sora',sans-serif;--noto:'Noto Sans TC',sans-serif;--r:20px;--rsm:12px;--rxs:8px;--tbh:72px;--sh:0 2px 16px rgba(0,0,0,.06);--shl:0 8px 32px rgba(0,0,0,.12);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:var(--noto);min-height:100dvh;max-width:430px;margin:0 auto;overflow:hidden;}
+#app{display:flex;flex-direction:column;height:100dvh;}
+#screen{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--tbh) + 20px);-webkit-overflow-scrolling:touch;}
+#screen::-webkit-scrollbar{display:none;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:54px 20px 12px;}
+.topbar-avatar{font-size:17px;font-family:var(--sora);font-weight:700;color:var(--black);letter-spacing:-.3px;}
+.topbar-actions{display:flex;gap:8px;}
+.topbar-icon{width:38px;height:38px;border-radius:50%;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--sh);}
+.topbar-icon svg{width:18px;height:18px;stroke:var(--black);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.seg-tabs{display:flex;padding:0 20px 20px;}
+.seg-tab{padding:8px 18px;border-radius:20px;font-size:14px;font-family:var(--sora);font-weight:500;cursor:pointer;color:var(--muted);transition:all .2s;}
+.seg-tab.active{background:var(--black);color:#fff;}
+.bal-section{padding:0 20px 20px;}
+.bal-label{font-size:13px;color:var(--muted);font-family:var(--sora);margin-bottom:6px;}
+.bal-amt{font-size:48px;font-family:var(--sora);font-weight:700;letter-spacing:-2px;line-height:1;margin-bottom:20px;}
+.bal-amt.pos{color:var(--black);}.bal-amt.neg{color:var(--red);}
+.pill-card{background:var(--black);border-radius:28px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shl);}
+.pill-item{display:flex;align-items:center;gap:14px;}
+.pill-circle{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;}
+.pill-circle svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;}
+.pill-lbl{font-size:11px;color:rgba(255,255,255,.5);font-family:var(--sora);margin-bottom:2px;}
+.pill-val{font-size:18px;font-family:var(--sora);font-weight:600;color:#fff;}
+.pill-div{width:1px;height:40px;background:rgba(255,255,255,.12);}
+.mo-row{display:flex;align-items:center;padding:20px 20px 8px;gap:10px;}
+.mo-nav{width:32px;height:32px;border-radius:50%;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.mo-nav svg{width:14px;height:14px;fill:none;stroke:var(--black);stroke-width:2;stroke-linecap:round;}
+.mo-lbl{flex:1;text-align:center;font-family:var(--sora);font-size:14px;font-weight:600;}
+.accts{padding:0 20px;}
+.acct-row{display:flex;align-items:center;justify-content:space-between;background:var(--white);border-radius:var(--rsm);padding:16px 18px;margin-bottom:8px;box-shadow:var(--sh);cursor:pointer;transition:transform .15s;}
+.acct-row:active{transform:scale(.98);}
+.acct-left{display:flex;align-items:center;gap:14px;}
+.acct-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.acct-ico.p{background:var(--blue-bg);}.acct-ico.b{background:#fff4e6;}
+.acct-name{font-size:14px;font-weight:500;font-family:var(--sora);}
+.acct-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.acct-right{display:flex;align-items:center;gap:8px;}
+.acct-amt{font-size:15px;font-family:var(--sora);font-weight:600;}
+.acct-chev svg{width:14px;height:14px;fill:none;stroke:var(--muted2);stroke-width:2;stroke-linecap:round;}
+.tx-sec{padding:20px 20px 0;}
+.tx-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.tx-ttl{font-size:16px;font-weight:600;font-family:var(--sora);}
+.tx-item{display:flex;align-items:center;gap:14px;background:var(--white);border-radius:var(--rsm);padding:14px 18px;margin-bottom:8px;box-shadow:var(--sh);cursor:pointer;transition:transform .15s;animation:si .25s ease both;}
+.tx-item:active{transform:scale(.98);}
+@keyframes si{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.tx-emo{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.tx-info{flex:1;min-width:0;}
+.tx-name{font-size:14px;font-weight:500;font-family:var(--sora);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tx-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.tx-right{text-align:right;}
+.tx-amt{font-size:15px;font-family:var(--sora);font-weight:600;}
+.tx-amt.income{color:var(--green);}.tx-amt.expense{color:var(--red);}
+.tx-usd{font-size:10px;color:var(--muted2);margin-top:2px;}
+.tx-badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:4px;margin-top:3px;font-family:var(--sora);}
+.tx-badge.personal{background:var(--blue-bg);color:var(--blue);}.tx-badge.business{background:#fff4e6;color:var(--orange);}
+.empty{text-align:center;padding:48px 20px;}
+.empty-emo{font-size:44px;margin-bottom:12px;}
+.empty-txt{color:var(--muted);font-size:13px;line-height:1.6;}
+.loading{display:flex;align-items:center;justify-content:center;gap:8px;padding:40px;color:var(--muted);font-size:13px;}
+.spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--black);border-radius:50%;animation:sp .6s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+#tabbar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);width:calc(100% - 40px);max-width:390px;height:var(--tbh);background:var(--black);border-radius:36px;display:flex;align-items:center;justify-content:space-around;z-index:100;box-shadow:var(--shl);padding:0 8px;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;cursor:pointer;border-radius:28px;}
+.tab svg{width:22px;height:22px;stroke:rgba(255,255,255,.4);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s;}
+.tab span{font-size:10px;color:rgba(255,255,255,.4);font-family:var(--sora);transition:color .2s;}
+.tab.active svg{stroke:#fff;}.tab.active span{color:#fff;}
+.tab-add-wrap{flex:1;display:flex;justify-content:center;}
+.tab-add{width:52px;height:52px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s;box-shadow:0 4px 16px rgba(255,255,255,.2);}
+.tab-add:active{transform:scale(.9);}
+.tab-add svg{width:24px;height:24px;stroke:var(--black);fill:none;stroke-width:2.5;stroke-linecap:round;}
+.page{display:none;}
+.page.active{display:block;animation:pi .22s ease;}
+@keyframes pi{from{opacity:0;}to{opacity:1;}}
+
+/* SAVINGS */
+.sav-page{padding:54px 20px 0;}
+.sav-hero{background:var(--black);border-radius:var(--r);padding:24px;margin-bottom:20px;position:relative;overflow:hidden;}
+.sav-hero::after{content:'🎯';position:absolute;right:16px;bottom:-10px;font-size:72px;opacity:.12;}
+.sav-hero h2{font-size:22px;font-family:var(--sora);font-weight:700;color:#fff;margin-bottom:4px;}
+.sav-hero p{font-size:12px;color:rgba(255,255,255,.5);line-height:1.6;}
+.sav-total-row{display:flex;align-items:baseline;gap:8px;margin-top:14px;}
+.sav-total-val{font-size:32px;font-family:var(--sora);font-weight:700;color:#fff;}
+.sav-total-lbl{font-size:12px;color:rgba(255,255,255,.4);font-family:var(--sora);}
+.add-goal-btn{width:100%;padding:14px;border-radius:var(--rsm);border:1.5px solid var(--black);background:transparent;color:var(--black);font-family:var(--sora);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:20px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.add-goal-btn:hover{background:var(--black);color:#fff;}
+.goal-card{background:var(--white);border-radius:var(--r);padding:20px;margin-bottom:12px;box-shadow:var(--sh);animation:si .25s ease both;}
+.goal-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.goal-icon-name{display:flex;align-items:center;gap:12px;}
+.goal-ico{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.goal-name{font-size:16px;font-weight:600;font-family:var(--sora);}
+.goal-dl{font-size:11px;color:var(--muted);margin-top:3px;}
+.goal-del-btn{width:28px;height:28px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;color:var(--muted);font-size:18px;flex-shrink:0;}
+.goal-prog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.goal-pct{font-size:13px;font-family:var(--sora);font-weight:600;}
+.goal-amts{font-size:11px;color:var(--muted);font-family:var(--sora);}
+.prog-track{width:100%;height:9px;background:var(--bg);border-radius:5px;overflow:hidden;margin-bottom:16px;}
+.prog-fill{height:100%;border-radius:5px;transition:width .7s cubic-bezier(.25,.8,.25,1);}
+.prog-fill.low{background:var(--red);}.prog-fill.mid{background:var(--gold);}.prog-fill.hi{background:var(--green);}.prog-fill.done{background:var(--green);}
+.goal-actions{display:flex;gap:8px;}
+.goal-dep-btn{flex:1;padding:11px;border-radius:var(--rxs);background:var(--black);color:#fff;border:none;font-family:var(--sora);font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.goal-dep-btn:active{opacity:.8;}
+.goal-log-btn{flex:1;padding:11px;border-radius:var(--rxs);background:var(--bg);color:var(--text);border:1px solid var(--border);font-family:var(--sora);font-size:12px;cursor:pointer;}
+.dep-list{margin-top:14px;border-top:1px solid var(--border);padding-top:12px;display:none;}
+.dep-list.open{display:block;}
+.dep-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.dep-item:last-child{border-bottom:none;padding-bottom:0;}
+.dep-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.dep-note{flex:1;font-size:12px;}
+.dep-date{font-size:10px;color:var(--muted);font-family:var(--sora);}
+.dep-amt{font-size:13px;font-family:var(--sora);font-weight:600;color:var(--green);}
+.done-badge{display:inline-flex;align-items:center;gap:4px;background:var(--green-bg);color:var(--green);font-size:11px;font-family:var(--sora);font-weight:600;padding:4px 10px;border-radius:20px;}
+
+/* REMINDER */
+.rem-page{padding:54px 20px 0;}
+.rem-hero{background:var(--black);border-radius:var(--r);padding:24px;margin-bottom:20px;}
+.rem-hero-top{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+.rem-hero h2{font-size:20px;font-family:var(--sora);font-weight:700;color:#fff;}
+.rem-hero p{font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;}
+.notif-btn{width:100%;padding:14px;border-radius:var(--rsm);border:1.5px solid var(--black);background:transparent;color:var(--black);font-family:var(--sora);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:20px;transition:all .15s;}
+.notif-btn:hover{background:var(--black);color:#fff;}
+.notif-btn.granted{border-color:var(--green);color:var(--green);}
+.notif-btn.denied{border-color:var(--muted2);color:var(--muted);cursor:default;}
+.rem-card{background:var(--white);border-radius:var(--r);padding:18px;margin-bottom:10px;box-shadow:var(--sh);}
+.rem-card-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.rem-name-inp{flex:1;border:none;outline:none;font-family:var(--sora);font-size:15px;font-weight:600;color:var(--text);background:transparent;}
+.rem-del{width:28px;height:28px;border-radius:50%;background:#f5f5f5;border:none;cursor:pointer;color:var(--muted);font-size:16px;}
+.rem-time-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.rem-time-lbl{font-size:12px;color:var(--muted);font-family:var(--sora);width:30px;}
+.rem-time-inp{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rxs);padding:10px 14px;font-family:var(--sora);font-size:15px;font-weight:600;color:var(--text);outline:none;}
+.rem-time-inp:focus{border-color:var(--black);}
+.days-row{display:flex;gap:6px;}
+.day-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--sora);font-weight:500;background:var(--bg);color:var(--muted);cursor:pointer;border:1.5px solid transparent;transition:all .15s;}
+.day-dot.active{background:var(--black);color:#fff;}
+.rem-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.rem-footer-lbl{font-size:12px;color:var(--muted);font-family:var(--sora);}
+.tog{position:relative;width:46px;height:26px;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-s{position:absolute;inset:0;background:var(--border);border-radius:13px;cursor:pointer;transition:.2s;}
+.tog-s::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.tog input:checked+.tog-s{background:var(--black);}
+.tog input:checked+.tog-s::before{transform:translateX(20px);}
+.add-rem-btn{width:100%;padding:14px;border-radius:var(--rsm);background:var(--bg);border:1.5px dashed var(--muted2);color:var(--muted);font-family:var(--sora);font-size:13px;cursor:pointer;transition:all .15s;margin-bottom:16px;}
+.add-rem-btn:hover{border-color:var(--black);color:var(--black);}
+.upcoming-box{background:var(--white);border-radius:var(--r);padding:18px;box-shadow:var(--sh);margin-bottom:20px;}
+.upcoming-title{font-size:12px;color:var(--muted);font-family:var(--sora);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px;}
+.upcoming-item{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);}
+.upcoming-item:last-child{border-bottom:none;padding-bottom:0;}
+.upcoming-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+
+/* SETTINGS */
+.sett-page{padding:54px 20px 0;}
+.sett-group{margin-bottom:24px;}
+.sett-gtitle{font-size:11px;color:var(--muted);font-family:var(--sora);font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;padding-left:4px;}
+.sett-card{background:var(--white);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+.sett-row{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);}
+.sett-row:last-child{border-bottom:none;}
+.sett-rlabel{font-size:14px;font-family:var(--sora);}
+.sett-rsub{font-size:11px;color:var(--muted);margin-top:2px;}
+.rate-inp{width:80px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rxs);padding:6px 10px;font-family:var(--sora);font-size:13px;font-weight:600;text-align:right;outline:none;}
+.rate-inp:focus{border-color:var(--black);}
+.api-inp{width:100%;background:var(--bg);border:none;padding:14px 18px;font-family:var(--sora);font-size:12px;color:var(--text);outline:none;}
+.sett-save-btn{width:100%;padding:16px;background:var(--black);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--sora);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;}
+
+/* OVERLAY / DRAWER */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.drawer{background:var(--white);border-radius:28px 28px 0 0;width:100%;max-width:430px;max-height:94dvh;overflow-y:auto;padding-bottom:36px;transform:translateY(32px);transition:transform .28s cubic-bezier(.32,.72,0,1);}
+.overlay.open .drawer{transform:translateY(0);}
+.drawer::-webkit-scrollbar{display:none;}
+.dh{width:40px;height:4px;background:var(--border);border-radius:2px;margin:14px auto 0;}
+.dtitle{font-size:20px;font-family:var(--sora);font-weight:700;padding:16px 22px 20px;}
+.fg{padding:0 22px 18px;}
+.flbl{font-size:11px;color:var(--muted);font-family:var(--sora);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;display:block;}
+.fseg{display:flex;background:var(--bg);border-radius:var(--rsm);padding:4px;}
+.fseg-btn{flex:1;text-align:center;padding:10px;border-radius:10px;font-size:13px;font-family:var(--sora);font-weight:500;cursor:pointer;color:var(--muted);transition:all .15s;}
+.fseg-btn.active.expense{background:var(--black);color:#fff;}
+.fseg-btn.active.income{background:var(--green);color:#fff;}
+.finp{width:100%;background:var(--bg);border:1.5px solid transparent;border-radius:var(--rsm);padding:14px 16px;font-family:var(--sora);font-size:15px;color:var(--text);outline:none;transition:border-color .15s;}
+.finp:focus{border-color:var(--black);background:#fff;}
+.famt-row{display:flex;gap:8px;}
+.fcur{width:88px;flex-shrink:0;}
+.facct-row{display:flex;gap:8px;}
+.facct-btn{flex:1;padding:12px;border-radius:var(--rsm);text-align:center;font-size:13px;font-family:var(--sora);font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid transparent;color:var(--muted);transition:all .15s;}
+.facct-btn.active{background:var(--black);color:#fff;border-color:var(--black);}
+.facct-btn.active.personal{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}
+.facct-btn.active.business{background:#fff4e6;border-color:var(--orange);color:var(--orange);}
+.cat-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.cat-pill{padding:8px 16px;border-radius:20px;font-size:12px;font-family:var(--sora);font-weight:500;background:var(--bg);color:var(--muted);cursor:pointer;transition:all .15s;border:1.5px solid transparent;}
+.cat-pill.active{background:var(--black);color:#fff;border-color:var(--black);}
+.rec-area{border:1.5px dashed var(--border);border-radius:var(--rsm);padding:22px;text-align:center;cursor:pointer;transition:border-color .15s;}
+.rec-area:hover{border-color:var(--black);}
+.rec-area-txt{font-size:12px;color:var(--muted);font-family:var(--sora);margin-top:8px;}
+.rec-img{width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:10px;display:none;}
+#recFile{display:none;}
+.fsub{margin:8px 22px 0;width:calc(100% - 44px);background:var(--black);color:#fff;border:none;border-radius:var(--rsm);padding:18px;font-family:var(--sora);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.fsub:active{opacity:.8;}.fsub:disabled{opacity:.35;cursor:default;}
+.ep-row{display:flex;flex-wrap:wrap;gap:8px;}
+.ep{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;background:var(--bg);border:2px solid transparent;transition:all .15s;}
+.ep.active{border-color:var(--black);background:#fff;box-shadow:var(--sh);}
+.dep-goal-info{background:var(--bg);border-radius:var(--rsm);padding:14px 16px;margin:0 22px 18px;}
+.dep-goal-name{font-size:14px;font-weight:600;font-family:var(--sora);}
+.dep-goal-rem{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--sora);}
+
+.toast{position:fixed;bottom:calc(var(--tbh) + 28px);left:50%;transform:translateX(-50%) translateY(12px);background:var(--black);color:#fff;border-radius:20px;padding:10px 20px;font-size:13px;font-family:var(--sora);z-index:400;opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;box-shadow:var(--shl);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.success::before{content:'✓  ';color:#4ade80;}
+.toast.error::before{content:'✕  ';color:#f87171;}
+</style>
+</head>
+<body>
+<div id="app">
+ <div id="screen">
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+   <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px;">
+     <div class="topbar-avatar">我的帳戶紀錄</div>
+     <div id="syncBadge" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:var(--bg);border:1px solid var(--border);font-size:11px;font-family:var(--sora);color:var(--muted);">
+      <span id="syncDot" style="width:7px;height:7px;border-radius:50%;background:var(--muted2);flex-shrink:0;display:inline-block;"></span>
+      <span id="syncTxt">未連線</span>
+     </div>
+    </div>
+    <div class="topbar-actions">
+     <div class="topbar-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+     <div class="topbar-icon" onclick="showPage('reminder')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+    </div>
+   </div>
+   <div class="seg-tabs" id="seg-tabs">
+    <div class="seg-tab active" onclick="setAV('all')">總覽</div>
+   </div>
+   <div class="bal-section">
+    <div class="bal-label" id="balLabel">本月結餘（USD）</div>
+    <div class="bal-amt pos" id="netBal">$0.00</div>
+    <div class="pill-card">
+     <div class="pill-item"><div class="pill-circle"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg></div><div><div class="pill-lbl">收入</div><div class="pill-val" id="totInc">$0.00</div></div></div>
+     <div class="pill-div"></div>
+     <div class="pill-item"><div class="pill-circle"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div><div><div class="pill-lbl">支出</div><div class="pill-val" id="totExp">$0.00</div></div></div>
+    </div>
+   </div>
+   <div class="mo-row">
+    <div class="mo-nav" onclick="chMo(-1)"><svg viewBox="0 0 16 16"><polyline points="10,4 6,8 10,12"/></svg></div>
+    <div class="mo-lbl" id="moLbl">—</div>
+    <div class="mo-nav" onclick="chMo(1)"><svg viewBox="0 0 16 16"><polyline points="6,4 10,8 6,12"/></svg></div>
+   </div>
+   <div class="accts" id="acctList"></div>
+   <div class="tx-sec">
+    <div class="tx-hdr"><div class="tx-ttl">最近交易</div></div>
+    <div id="txList"><div class="loading"><div class="spin"></div> 載入中…</div></div>
+   </div>
+  </div>
+
+  <!-- SAVINGS -->
+  <div class="page" id="page-savings">
+   <div class="sav-page">
+    <div class="sav-hero">
+     <h2>存錢目標</h2>
+     <p>設定目標，逐步累積，追蹤每一筆存款</p>
+     <div class="sav-total-row"><div class="sav-total-val" id="savTotal">$0.00</div><div class="sav-total-lbl">已存總額（USD）</div></div>
+    </div>
+    <button class="add-goal-btn" onclick="openNewGoal()">
+     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+     新增存錢目標
+    </button>
+    <div id="goalList"></div>
+   </div>
+  </div>
+
+  <!-- REMINDER -->
+  <div class="page" id="page-reminder">
+   <div class="rem-page">
+    <div class="rem-hero"><div class="rem-hero-top"><span style="font-size:28px">🔔</span><h2>提醒設定</h2></div><p>設定每天或特定日期的記帳提醒</p></div>
+    <button class="notif-btn" id="notifBtn" onclick="reqNotif()">允許推播通知</button>
+    <div id="remList"></div>
+    <button class="add-rem-btn" onclick="addRem()">＋ 新增提醒</button>
+    <div class="upcoming-box" id="upBox" style="display:none"><div class="upcoming-title">即將到來</div><div id="upList"></div></div>
+   </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="page" id="page-history">
+   <div style="padding:54px 20px 0"><div style="font-size:22px;font-family:var(--sora);font-weight:700;margin-bottom:20px">所有記錄</div><div id="histList"><div class="loading"><div class="spin"></div></div></div></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+   <div class="sett-page">
+    <div style="font-size:22px;font-family:var(--sora);font-weight:700;margin-bottom:24px">設定</div>
+    <div class="sett-group"><div class="sett-gtitle">Apps Script API</div><div class="sett-card"><input class="api-inp" id="apiInp" type="url" placeholder="https://script.google.com/macros/s/…" oninput="saveApi()"></div></div>
+    <div class="sett-group"><div class="sett-gtitle">匯率（兌 USD）</div><div class="sett-card"><div class="sett-row"><div><div class="sett-rlabel">KHR 瑞爾</div><div class="sett-rsub">1 USD = ? KHR</div></div><input class="rate-inp" id="rKHR" type="number" placeholder="4100"></div><div class="sett-row"><div><div class="sett-rlabel">TWD 台幣</div><div class="sett-rsub">1 USD = ? TWD</div></div><input class="rate-inp" id="rTWD" type="number" placeholder="32"></div></div><button class="sett-save-btn" onclick="saveRates()">更新匯率到雲端</button></div>
+   </div>
+  </div>
+
+ </div><!-- /screen -->
+
+ <!-- TABBAR -->
+ <div id="tabbar">
+  <div class="tab active" id="tab-home" onclick="showPage('home')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>首頁</span></div>
+  <div class="tab" id="tab-savings" onclick="showPage('savings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span>目標</span></div>
+  <div class="tab-add-wrap"><div class="tab-add" onclick="openAdd()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+  <div class="tab" id="tab-reminder" onclick="showPage('reminder')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><span>提醒</span></div>
+  <div class="tab" id="tab-settings" onclick="showPage('settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span>設定</span></div>
+ </div>
+</div>
+
+<!-- ADD TX DRAWER -->
+<div class="overlay" id="addOv">
+ <div class="drawer">
+  <div class="dh"></div><div class="dtitle">新增記帳</div>
+  <div class="fg"><label class="flbl">類型</label><div class="fseg"><div class="fseg-btn expense active" onclick="setTp('expense')">支出</div><div class="fseg-btn income" onclick="setTp('income')">收入</div></div></div>
+  <div class="fg"><label class="flbl">金額</label><div class="famt-row"><select class="finp fcur" id="curSel"><option value="USD" selected>USD</option><option value="KHR">KHR</option><option value="TWD">TWD</option></select><input class="finp" id="amtInp" type="number" placeholder="0.00" min="0" step="any"></div></div>
+  <div class="fg"><label class="flbl">帳戶</label><div class="facct-row" id="addAcctRow"></div></div>
+  <div class="fg"><label class="flbl">分類</label><div class="cat-pills" id="catPills"></div></div>
+  <div class="fg"><label class="flbl">備註</label><input class="finp" id="noteInp" type="text" placeholder="選填"></div>
+  <div class="fg"><label class="flbl">日期</label><input class="finp" id="dateInp" type="date"></div>
+  <div class="fg"><label class="flbl">收據</label><div class="rec-area" onclick="document.getElementById('recFile').click()"><div style="font-size:28px">📷</div><div class="rec-area-txt">點擊拍照或選取圖片</div><img class="rec-img" id="recPreview"></div><input type="file" id="recFile" accept="image/*" capture="environment" onchange="handleRec(this)"></div>
+  <button class="fsub" id="fSub" onclick="subTx()">記帳</button>
+ </div>
+</div>
+
+<!-- EDIT TX DRAWER -->
+<div class="overlay" id="editOv">
+ <div class="drawer">
+  <div class="dh"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px 20px;">
+   <div class="dtitle" style="padding:0">編輯記帳</div>
+   <button onclick="delTx()" style="background:#fff4f4;border:none;color:var(--red);font-family:var(--sora);font-size:13px;font-weight:600;padding:8px 16px;border-radius:20px;cursor:pointer;">刪除</button>
+  </div>
+  <div class="fg"><label class="flbl">類型</label><div class="fseg"><div class="fseg-btn expense" id="etp-expense" onclick="setEtp('expense')">支出</div><div class="fseg-btn income" id="etp-income" onclick="setEtp('income')">收入</div></div></div>
+  <div class="fg"><label class="flbl">金額</label><div class="famt-row"><select class="finp fcur" id="eCurSel"><option value="USD">USD</option><option value="KHR">KHR</option><option value="TWD">TWD</option></select><input class="finp" id="eAmtInp" type="number" placeholder="0.00" min="0" step="any"></div></div>
+  <div class="fg"><label class="flbl">帳戶</label><div class="facct-row" id="editAcctRow"></div></div>
+  <div class="fg"><label class="flbl">分類</label><div class="cat-pills" id="eCatPills"></div></div>
+  <div class="fg"><label class="flbl">備註</label><input class="finp" id="eNoteInp" type="text" placeholder="選填"></div>
+  <div class="fg"><label class="flbl">日期</label><input class="finp" id="eDateInp" type="date"></div>
+  <button class="fsub" id="eSub" onclick="subEditTx()">儲存修改</button>
+ </div>
+</div>
+
+<!-- NEW GOAL DRAWER -->
+<div class="overlay" id="goalOv">
+ <div class="drawer">
+  <div class="dh"></div><div class="dtitle">新增存錢目標</div>
+  <div class="fg"><label class="flbl">目標名稱</label><input class="finp" id="gName" type="text" placeholder="例：旅遊基金、新電腦…"></div>
+  <div class="fg"><label class="flbl">選擇圖示</label><div class="ep-row" id="epRow"></div></div>
+  <div class="fg"><label class="flbl">目標金額（USD）</label><input class="finp" id="gTarget" type="number" placeholder="0.00" min="0" step="any"></div>
+  <div class="fg"><label class="flbl">備註（選填）</label><input class="finp" id="gNote" type="text" placeholder="存錢計畫…"></div>
+  <button class="fsub" onclick="subGoal()">建立目標</button>
+ </div>
+</div>
+
+<!-- DEPOSIT DRAWER -->
+<div class="overlay" id="depOv">
+ <div class="drawer">
+  <div class="dh"></div><div class="dtitle">存入金額</div>
+  <div class="dep-goal-info"><div class="dep-goal-name" id="depGName">—</div><div class="dep-goal-rem" id="depGRem">還差 — 達成目標</div></div>
+  <div class="fg"><label class="flbl">金額（USD）</label><input class="finp" id="depAmt" type="number" placeholder="0.00" min="0" step="any"></div>
+  <div class="fg"><label class="flbl">備註（選填）</label><input class="finp" id="depNote" type="text" placeholder="這筆從哪來…"></div>
+  <div class="fg"><label class="flbl">日期</label><input class="finp" id="depDate" type="date"></div>
+  <button class="fsub" onclick="subDep()">確認存入</button>
+ </div>
+</div>
+
+<!-- ACCOUNT DETAIL DRAWER -->
+<div class="overlay" id="acctOv">
+ <div class="drawer">
+  <div class="dh"></div>
+  <div style="padding:16px 22px 0;display:flex;align-items:center;gap:14px;">
+   <div class="acct-ico" id="acctDetailIco" style="width:48px;height:48px;font-size:24px;border-radius:14px;"></div>
+   <div style="flex:1">
+    <div style="font-size:20px;font-family:var(--sora);font-weight:700;" id="acctDetailName">—</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="acctDetailSub">—</div>
+   </div>
+   <button id="acctDetailEditBtn" onclick="openEditAcct(this.dataset.acctid)" style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--sora);font-size:12px;padding:7px 14px;border-radius:20px;cursor:pointer;">編輯</button>
+  </div>
+  <div style="display:flex;gap:12px;padding:16px 22px;">
+   <div style="flex:1;background:var(--green-bg);border-radius:var(--rsm);padding:14px 16px;">
+    <div style="font-size:11px;color:var(--green);font-family:var(--sora);margin-bottom:4px;">收入</div>
+    <div style="font-size:18px;font-family:var(--sora);font-weight:700;color:var(--green);" id="acctDetailInc">$0.00</div>
+   </div>
+   <div style="flex:1;background:#fff4f4;border-radius:var(--rsm);padding:14px 16px;">
+    <div style="font-size:11px;color:var(--red);font-family:var(--sora);margin-bottom:4px;">支出</div>
+    <div style="font-size:18px;font-family:var(--sora);font-weight:700;color:var(--red);" id="acctDetailExp">$0.00</div>
+   </div>
+   <div style="flex:1;background:var(--bg);border-radius:var(--rsm);padding:14px 16px;">
+    <div style="font-size:11px;color:var(--muted);font-family:var(--sora);margin-bottom:4px;">結餘</div>
+    <div style="font-size:18px;font-family:var(--sora);font-weight:700;" id="acctDetailNet">$0.00</div>
+   </div>
+  </div>
+  <div style="padding:0 22px 8px;font-size:11px;color:var(--muted);font-family:var(--sora);font-weight:600;letter-spacing:.5px;text-transform:uppercase;">交易明細</div>
+  <div id="acctDetailList" style="padding:0 22px 36px;"></div>
+ </div>
+</div>
+
+<!-- ACCOUNT MANAGE DRAWER -->
+<div class="overlay" id="acctMgOv">
+ <div class="drawer">
+  <div class="dh"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px 20px;">
+   <div class="dtitle" style="padding:0" id="acctMgTitle">新增帳戶</div>
+   <button id="acctMgDelBtn" onclick="delAcct()" style="display:none;background:#fff4f4;border:none;color:var(--red);font-family:var(--sora);font-size:13px;font-weight:600;padding:8px 16px;border-radius:20px;cursor:pointer;">刪除</button>
+  </div>
+  <div class="fg"><label class="flbl">帳戶名稱</label><input class="finp" id="acctMgName" type="text" placeholder="例：個人、旅遊基金…"></div>
+  <div class="fg"><label class="flbl">選擇圖示</label><div class="ep-row" id="acctMgEmoji"></div></div>
+  <div class="fg"><label class="flbl">說明</label><input class="finp" id="acctMgSubInp" type="text" placeholder="帳戶說明…"></div>
+  <div class="fg"><label class="flbl">分類類型</label><div class="fseg" id="acctMgCatSeg"><div class="fseg-btn expense active" id="acctCatP" onclick="setAcctCat('personal')">個人消費</div><div class="fseg-btn income" id="acctCatB" onclick="setAcctCat('business')">業務</div></div></div>
+  <button class="fsub" id="acctMgSubmit" onclick="subAcct()">建立帳戶</button>
+ </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const AK='ledger_api_url',RK='ledger_reminders',GK='ledger_goals',ACCK='ledger_accounts';
+const ACCT_EMOJIS=['👤','🍱','🏦','💼','🏠','🎯','💰','🛒','🌟','🎨','✈️','🚗','🍎','📱','🎓','💡'];
+const ACCT_COLORS=['#eff4ff','#fff4e6','#e8f5e9','#fce4ec','#f3e8ff','#e0f7fa','#fff8e1','#f5f0ff'];
+const DAYS=['日','一','二','三','四','五','六'];
+const GEMOJI=['🎯','✈️','🏠','🚗','💻','📱','🎓','💍','👶','🌴','🎮','🏋️','🐶','🎸','💰','🏦','🛍️','🎁'];
+const GBGS=['#e8f5e9','#fff3e0','#eff4ff','#fce4ec','#f5f3ff','#fff8e1','#e0f7fa'];
+const EMOJI={'餐飲':'🍜','交通':'🚗','購物':'🛍️','娛樂':'🎮','薪資收入':'💰','住宿':'🏨','旅遊':'✈️','生活':'🧴','食材成本':'🥩','員工薪資':'👤','外送平台費':'📦','行銷廣告':'📣','營業收入':'💵'};
+const EBGS={'餐飲':'#fff3e0','交通':'#e8f0fe','購物':'#f3e8ff','娛樂':'#fce4ec','薪資收入':'#e8f5e9','住宿':'#eff4ff','旅遊':'#e0f7fa','生活':'#f0fdf4','食材成本':'#fff8e1','員工薪資':'#e8f0fe','外送平台費':'#e0f7fa','行銷廣告':'#fce4ec','營業收入':'#e8f5e9'};
+let API=localStorage.getItem(AK)||'';
+let S={av:'all',mo:'',tp:'expense',ac:'personal',cat:'',rf:null,cats:[],rates:{USD:1,KHR:0.000244,TWD:0.031},txs:[],rems:[],goals:[],accounts:[],selEmo:'🎯',depGid:null,txCache:{}};
+let _editAcctId=null,_acctCat='personal',_acctEmoji='💼';
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const now=new Date();
+  S.mo=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('dateInp').value=now.toISOString().split('T')[0];
+  document.getElementById('depDate').value=now.toISOString().split('T')[0];
+  document.getElementById('apiInp').value=API;
+  const khr=localStorage.getItem('rKHR'),twd=localStorage.getItem('rTWD');
+  if(khr){S.rates.KHR=1/+khr;document.getElementById('rKHR').value=khr;}
+  if(twd){S.rates.TWD=1/+twd;document.getElementById('rTWD').value=twd;}
+  S.rems=JSON.parse(localStorage.getItem(RK)||'null')||defRems();
+  S.goals=JSON.parse(localStorage.getItem(GK)||'[]');
+  S.accounts=JSON.parse(localStorage.getItem(ACCK)||'null')||[
+    {id:'personal',name:'個人',emoji:'👤',sub:'生活支出',catType:'personal',color:'#eff4ff'},
+    {id:'business',name:'Daily Nham',emoji:'🍱',sub:'餐廳業務',catType:'business',color:'#fff4e6'}
+  ];
+  S.ac=S.accounts[0]?.id||'personal';
+  renderAcctTabs();renderAcctCards();
+  updMoLbl();loadData();updNotifBtn();startChecker();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  buildEmojiPicker();
+});
+
+function showPage(n){
+  ['home','savings','reminder','history','settings'].forEach(p=>{const e=document.getElementById('page-'+p);if(e){e.style.display='none';e.classList.remove('active');}});
+  const el=document.getElementById('page-'+n);if(el){el.style.display='block';setTimeout(()=>el.classList.add('active'),10);}
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const tb=document.getElementById('tab-'+n);if(tb)tb.classList.add('active');
+  if(n==='reminder')renderRems();if(n==='savings')renderGoals();
+}
+function updMoLbl(){const[y,m]=S.mo.split('-');document.getElementById('moLbl').textContent=new Date(+y,+m-1,1).toLocaleDateString('zh-TW',{year:'numeric',month:'long'});}
+function chMo(d){const[y,m]=S.mo.split('-').map(Number);const nd=new Date(y,m-1+d,1);S.mo=`${nd.getFullYear()}-${String(nd.getMonth()+1).padStart(2,'0')}`;updMoLbl();loadData();}
+function setAV(a){
+  S.av=a;renderAcctTabs();
+  const lbl=document.getElementById('balLabel');
+  if(lbl){if(a==='all')lbl.textContent='本月結餘（USD）';else{const acct=S.accounts.find(x=>x.id===a);lbl.textContent=(acct?acct.name:a)+'結餘（USD）';}}
+  const acctList=document.getElementById('acctList');
+  if(acctList)acctList.style.display=a==='all'?'':'none';
+  renderTxs(S.txs,'txList');updSum(S.txs);updABal(S.txs);
+}
+
+async function apiG(p){if(!API)throw 0;return(await fetch(API+'?'+new URLSearchParams(p))).json();}
+async function apiP(b){if(!API)throw 0;return(await fetch(API,{method:'POST',body:JSON.stringify(b)})).json();}
+
+function setSyncStatus(state){
+  const dot=document.getElementById('syncDot'),txt=document.getElementById('syncTxt'),badge=document.getElementById('syncBadge');
+  if(!dot)return;
+  const cfg={ok:{color:'#1aad5e',text:'已同步',bg:'#e8f7ee',border:'#b6e8cc'},syncing:{color:'#f59e0b',text:'同步中…',bg:'#fff8e1',border:'#fde68a'},error:{color:'#e03535',text:'連線失敗',bg:'#fff4f4',border:'#fecaca'},offline:{color:'#999990',text:'未連線',bg:'var(--bg)',border:'var(--border)'}};
+  const c=cfg[state]||cfg.offline;
+  dot.style.background=c.color;txt.textContent=c.text;
+  badge.style.background=c.bg;badge.style.borderColor=c.border;badge.style.color=c.color;
+  if(state==='syncing')dot.style.animation='sp .8s linear infinite';else dot.style.animation='';
+}
+async function loadData(){
+  if(!API){const off=JSON.parse(localStorage.getItem('otx')||'[]');S.txs=off.filter(t=>t.date&&t.date.startsWith(S.mo));renderTxs(S.txs,'txList');updSum(S.txs);updABal(S.txs);setSyncStatus('offline');return;}
+  setSyncStatus('syncing');
+  try{
+    const[cats,txs]=await Promise.all([S.cats.length?S.cats:apiG({action:'getCategories'}),apiG({action:'getTransactions'})]);
+    S.cats=Array.isArray(cats)?cats:S.cats;
+    const allTxs=Array.isArray(txs)?txs:[];
+    // 日期格式可能含時間（2026-04-05T17:00:00.000Z），統一取前7碼比對月份
+    S.txs=allTxs.filter(t=>t.date&&String(t.date).slice(0,7)===S.mo);
+    renderTxs(S.txs,'txList');updSum(S.txs);updABal(S.txs);setSyncStatus('ok');
+  }catch{document.getElementById('txList').innerHTML='<div class="empty"><div class="empty-emo">⚡</div><div class="empty-txt">無法連線<br>請在設定中填入 API URL</div></div>';setSyncStatus('error');}
+}
+async function loadHist(){if(!API)return;try{const txs=await apiG({action:'getTransactions'});renderTxs(Array.isArray(txs)?txs:[],'histList');}catch{}}
+function renderTxs(txs,tid){
+  const el=document.getElementById(tid);if(!el)return;
+  let f=txs;if(S.av!=='all')f=txs.filter(t=>t.account===S.av);
+  if(!f.length){el.innerHTML='<div class="empty"><div class="empty-emo">📭</div><div class="empty-txt">這個月還沒有記錄<br>點 + 開始記帳吧</div></div>';return;}
+  f.forEach(tx=>{if(tx.id)S.txCache[tx.id]=tx;});
+  el.innerHTML=f.map((tx,i)=>{
+    const inc=tx.type==='income',sign=inc?'+':'-',cls=inc?'income':'expense';
+    const em=EMOJI[tx.category]||'📝',bg=EBGS[tx.category]||'#f5f5f0',usd=parseFloat(tx.amount_usd)||0;
+    const cid=tx.id?`data-txid="${tx.id}"`:'';
+    return`<div class="tx-item" style="animation-delay:${i*.04}s" ${cid} onclick="openEditTxById(this.dataset.txid)"><div class="tx-emo" style="background:${bg}">${em}</div><div class="tx-info"><div class="tx-name">${tx.category||'未分類'}</div><div class="tx-meta">${String(tx.date).slice(0,10)}${tx.note?' · '+tx.note:''}</div><span class="tx-badge ${tx.account}">${tx.account==='personal'?'個人':'Daily Nham'}</span></div><div class="tx-right"><div class="tx-amt ${cls}">${sign}${Number(tx.amount).toLocaleString()} ${tx.currency}</div><div class="tx-usd">≈ $${usd.toFixed(2)}</div>${tx.receipt_url?`<a href="${tx.receipt_url}" target="_blank" style="font-size:10px;color:#1aad5e">📎</a>`:''}</div></div>`;
+  }).join('');
+}
+function updSum(txs){
+  let i=0,e=0;
+  txs.filter(t=>S.av==='all'||t.account===S.av).forEach(t=>{const u=parseFloat(t.amount_usd)||0;if(t.type==='income')i+=u;else e+=u;});
+  const n=i-e,nb=document.getElementById('netBal');
+  nb.textContent=`${n>=0?'+':''}$${Math.abs(n).toFixed(2)}`;nb.className='bal-amt '+(n>=0?'pos':'neg');
+  document.getElementById('totInc').textContent=`$${i.toFixed(2)}`;document.getElementById('totExp').textContent=`$${e.toFixed(2)}`;
+}
+function updABal(txs){
+  S.accounts.forEach(a=>{let n=0;txs.filter(t=>t.account===a.id).forEach(t=>{const u=parseFloat(t.amount_usd)||0;n+=t.type==='income'?u:-u;});const e=document.getElementById('bal-'+a.id);if(e)e.textContent=`${n>=0?'+':''}$${Math.abs(n).toFixed(2)}`;});
+}
+
+/* ADD TX */
+function openAdd(){
+  const o=document.getElementById('addOv');o.classList.add('open');
+  renderAddAcctBtns();renderCats();
+  o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
+}
+function setTp(t){S.tp=t;document.querySelectorAll('#addOv .fseg-btn').forEach(b=>b.classList.remove('active'));document.querySelector('#addOv .fseg-btn.'+t).classList.add('active');renderCats();}
+function setAc(a){S.ac=a;document.querySelectorAll('#addAcctRow .facct-btn').forEach(b=>b.classList.remove('active'));const el=document.getElementById('addac-'+a);if(el)el.classList.add('active');renderCats();}
+function renderAddAcctBtns(){
+  const el=document.getElementById('addAcctRow');if(!el)return;
+  el.innerHTML=S.accounts.map(a=>`<div class="facct-btn ${a.id===S.ac?'active '+a.catType:''}" id="addac-${a.id}" onclick="setAc('${a.id}')">${a.emoji} ${a.name}</div>`).join('');
+}
+function selCat(n){S.cat=n;document.querySelectorAll('.cat-pill').forEach(p=>p.classList.toggle('active',p.dataset.cat===n));}
+function renderCats(){
+  const c=document.getElementById('catPills');
+  const acct=S.accounts.find(x=>x.id===S.ac);
+  const ct=acct?acct.catType:'personal';
+  const list=S.cats.filter(x=>x.account===S.ac).length?S.cats.filter(x=>x.account===S.ac):(ct==='business'?[{name:'食材成本'},{name:'員工薪資'},{name:'外送平台費'},{name:'行銷廣告'},{name:'營業收入'}]:[{name:'餐飲'},{name:'交通'},{name:'購物'},{name:'娛樂'},{name:'住宿'},{name:'旅遊'},{name:'生活'},{name:'薪資收入'}]);
+  c.innerHTML=list.map(x=>`<div class="cat-pill" data-cat="${x.name}" onclick="selCat('${x.name}')">${EMOJI[x.name]||'📝'} ${x.name}</div>`).join('');S.cat='';
+}
+function handleRec(inp){const f=inp.files[0];if(!f)return;S.rf=f;const r=new FileReader();r.onload=e=>{const p=document.getElementById('recPreview');p.src=e.target.result;p.style.display='block';};r.readAsDataURL(f);}
+function f64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});}
+async function subTx(){
+  const amt=parseFloat(document.getElementById('amtInp').value),cur=document.getElementById('curSel').value,note=document.getElementById('noteInp').value,date=document.getElementById('dateInp').value;
+  if(!amt||amt<=0){toast('請輸入金額','error');return;}if(!S.cat){toast('請選擇分類','error');return;}
+  const btn=document.getElementById('fSub');btn.disabled=true;btn.textContent='處理中…';
+  try{
+    let ru='';
+    if(S.rf&&API){const b=await f64(S.rf);const up=await apiP({action:'uploadReceipt',data:{base64:b,mimeType:S.rf.type,filename:'rec_'+Date.now()+'.jpg'}});ru=up.url||'';}
+    const rate=S.rates[cur]||1,d={date,type:S.tp,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,category:S.cat,note,account:S.ac,receipt_url:ru};
+    if(API)await apiP({action:'addTransaction',data:d});
+    else{const off=JSON.parse(localStorage.getItem('otx')||'[]');off.unshift({...d,id:'l'+Date.now()});localStorage.setItem('otx',JSON.stringify(off));}
+    setSyncStatus('ok');toast('記帳成功','success');document.getElementById('addOv').classList.remove('open');
+    document.getElementById('amtInp').value='';document.getElementById('noteInp').value='';document.getElementById('recPreview').style.display='none';S.rf=null;
+    await loadData();
+  }catch{toast('記帳失敗，請重試','error');}finally{btn.disabled=false;btn.textContent='記帳';}
+}
+
+/* SETTINGS */
+function saveApi(){API=document.getElementById('apiInp').value.trim();localStorage.setItem(AK,API);}
+async function saveRates(){
+  const khr=+document.getElementById('rKHR').value,twd=+document.getElementById('rTWD').value;
+  if(khr){S.rates.KHR=1/khr;localStorage.setItem('rKHR',khr);}if(twd){S.rates.TWD=1/twd;localStorage.setItem('rTWD',twd);}
+  if(!API){toast('匯率已儲存（本地）','success');return;}
+  try{const u=[];if(khr)u.push({currency:'KHR',rate:1/khr});if(twd)u.push({currency:'TWD',rate:1/twd});await apiP({action:'updateRates',data:u});toast('匯率已更新 ✓','success');}
+  catch{toast('本地已儲存，雲端失敗','error');}
+}
+
+/* ═══ SAVINGS GOALS ═══ */
+function saveGoals(){localStorage.setItem(GK,JSON.stringify(S.goals));}
+function gSaved(g){return(g.deposits||[]).reduce((s,d)=>s+(d.amount||0),0);}
+function gPct(g){return Math.min(100,Math.round(gSaved(g)/(g.target||1)*100));}
+
+function renderGoals(){
+  const total=S.goals.reduce((s,g)=>s+gSaved(g),0);
+  document.getElementById('savTotal').textContent=`$${total.toFixed(2)}`;
+  const list=document.getElementById('goalList');
+  if(!S.goals.length){list.innerHTML='<div class="empty"><div class="empty-emo">🎯</div><div class="empty-txt">還沒有存錢目標<br>建立第一個目標開始存錢吧！</div></div>';return;}
+  list.innerHTML=S.goals.map((g,gi)=>{
+    const saved=gSaved(g),pct=gPct(g),done=pct>=100,rem=Math.max(0,g.target-saved);
+    const fc=done?'done':pct>=60?'hi':pct>=30?'mid':'low',bg=GBGS[gi%GBGS.length];
+    const daysLeft=g.deadline?Math.ceil((new Date(g.deadline)-new Date())/86400000):null;
+    const dlTxt=g.deadline?(daysLeft>0?`截止 ${g.deadline}（還有 ${daysLeft} 天）`:daysLeft===0?'📅 今天截止':'⚠️ 已過截止日'):'';
+    const deps=g.deposits||[];
+    return`<div class="goal-card" style="animation-delay:${gi*.06}s">
+      <div class="goal-top">
+        <div class="goal-icon-name"><div class="goal-ico" style="background:${bg}">${g.emoji||'🎯'}</div><div><div class="goal-name">${g.name}</div>${dlTxt?`<div class="goal-dl">${dlTxt}</div>`:''}${g.note?`<div class="goal-dl">${g.note}</div>`:''}</div></div>
+        ${done?`<span class="done-badge">✓ 達成！</span>`:`<button class="goal-del-btn" onclick="delGoal('${g.id}')">×</button>`}
+      </div>
+      <div class="goal-prog-row"><div class="goal-pct">${pct}%</div><div class="goal-amts">$${saved.toFixed(2)} / $${(g.target||0).toFixed(2)}</div></div>
+      <div class="prog-track"><div class="prog-fill ${fc}" style="width:${pct}%"></div></div>
+      <div class="goal-actions">
+        <button class="goal-dep-btn" ${done?'style="background:var(--green)"':''} onclick="openDep('${g.id}')">＋ 存入</button>
+        <button class="goal-log-btn" onclick="togLog('log-${g.id}')">存款記錄${deps.length?` (${deps.length})`:''}</button>
+      </div>
+      <div class="dep-list" id="log-${g.id}">
+        ${deps.length?deps.slice().reverse().map(d=>`<div class="dep-item"><div class="dep-dot"></div><div class="dep-note">${d.note||'存款'}</div><div class="dep-date">${d.date}</div><div class="dep-amt">+$${(d.amount||0).toFixed(2)}</div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;padding:8px 0">還沒有存款記錄</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+function togLog(id){const e=document.getElementById(id);if(e)e.classList.toggle('open');}
+function delGoal(id){if(!confirm('確定刪除這個目標？'))return;S.goals=S.goals.filter(g=>g.id!==id);saveGoals();renderGoals();}
+
+function buildEmojiPicker(){
+  document.getElementById('epRow').innerHTML=GEMOJI.map(e=>`<div class="ep ${e===S.selEmo?'active':''}" onclick="pickEmo('${e}')">${e}</div>`).join('');
+}
+function pickEmo(e){S.selEmo=e;document.querySelectorAll('.ep').forEach(el=>el.classList.toggle('active',el.textContent===e));}
+
+function openNewGoal(){
+  S.selEmo='🎯';buildEmojiPicker();
+  ['gName','gTarget','gNote'].forEach(id=>{document.getElementById(id).value='';});
+  const o=document.getElementById('goalOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
+}
+function subGoal(){
+  const name=document.getElementById('gName').value.trim(),target=parseFloat(document.getElementById('gTarget').value);
+  if(!name){toast('請填入目標名稱','error');return;}if(!target||target<=0){toast('請填入目標金額','error');return;}
+  S.goals.push({id:'g'+Date.now(),name,emoji:S.selEmo,target,note:document.getElementById('gNote').value.trim(),deposits:[],createdAt:new Date().toISOString()});
+  saveGoals();document.getElementById('goalOv').classList.remove('open');renderGoals();toast('目標已建立 ✓','success');
+}
+
+function openDep(gid){
+  const g=S.goals.find(x=>x.id===gid);if(!g)return;
+  S.depGid=gid;const saved=gSaved(g),rem=Math.max(0,g.target-saved);
+  document.getElementById('depGName').textContent=g.emoji+' '+g.name;
+  document.getElementById('depGRem').textContent=rem>0?`還差 $${rem.toFixed(2)} 達成目標`:'🎉 目標已達成！';
+  document.getElementById('depAmt').value='';document.getElementById('depNote').value='';
+  document.getElementById('depDate').value=new Date().toISOString().split('T')[0];
+  const o=document.getElementById('depOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
+}
+function subDep(){
+  const amt=parseFloat(document.getElementById('depAmt').value),note=document.getElementById('depNote').value.trim(),date=document.getElementById('depDate').value;
+  if(!amt||amt<=0){toast('請輸入存款金額','error');return;}
+  const g=S.goals.find(x=>x.id===S.depGid);if(!g)return;
+  if(!g.deposits)g.deposits=[];
+  g.deposits.push({id:'d'+Date.now(),amount:amt,note,date});
+  saveGoals();document.getElementById('depOv').classList.remove('open');renderGoals();
+  const pct=gPct(g);
+  toast(pct>=100?'🎉 恭喜！目標達成！':`已存入 $${amt.toFixed(2)} ✓（${pct}%）`,'success');
+}
+
+/* REMINDERS */
+function defRems(){return[{id:'r1',name:'晚餐後記帳',time:'21:00',days:[0,1,2,3,4,5,6],enabled:true},{id:'r2',name:'每週結算',time:'10:00',days:[0],enabled:false}];}
+function saveRems(){localStorage.setItem(RK,JSON.stringify(S.rems));}
+function addRem(){S.rems.push({id:'r'+Date.now(),name:'新提醒',time:'09:00',days:[1,2,3,4,5],enabled:true});saveRems();renderRems();}
+function delRem(id){S.rems=S.rems.filter(r=>r.id!==id);saveRems();renderRems();}
+function updRem(id,f,v){const r=S.rems.find(r=>r.id===id);if(r){r[f]=v;saveRems();updUp();}}
+function togDay(id,d){const r=S.rems.find(r=>r.id===id);if(!r)return;r.days=r.days.includes(d)?r.days.filter(x=>x!==d):[...r.days,d].sort();saveRems();document.querySelectorAll(`[data-rem="${id}"] [data-day="${d}"]`).forEach(e=>e.classList.toggle('active',r.days.includes(d)));updUp();}
+function renderRems(){
+  updNotifBtn();
+  document.getElementById('remList').innerHTML=S.rems.map(r=>`<div class="rem-card" data-rem="${r.id}"><div class="rem-card-top"><input class="rem-name-inp" value="${r.name}" onchange="updRem('${r.id}','name',this.value)" placeholder="提醒名稱"><button class="rem-del" onclick="delRem('${r.id}')">×</button></div><div class="rem-time-row"><div class="rem-time-lbl">時間</div><input type="time" class="rem-time-inp" value="${r.time}" onchange="updRem('${r.id}','time',this.value)"></div><div class="days-row">${DAYS.map((d,i)=>`<div class="day-dot ${r.days.includes(i)?'active':''}" data-day="${i}" onclick="togDay('${r.id}',${i})">${d}</div>`).join('')}</div><div class="rem-footer"><span class="rem-footer-lbl">啟用</span><label class="tog"><input type="checkbox" ${r.enabled?'checked':''} onchange="updRem('${r.id}','enabled',this.checked)"><span class="tog-s"></span></label></div></div>`).join('');
+  updUp();
+}
+function updUp(){
+  const box=document.getElementById('upBox'),lst=document.getElementById('upList'),items=getUp();
+  if(!items.length){box.style.display='none';return;}
+  box.style.display='block';lst.innerHTML=items.map(u=>`<div class="upcoming-item"><div class="upcoming-dot"></div><div style="flex:1"><div style="font-size:13px;font-family:var(--sora)">${u.name}</div><div style="font-size:11px;color:var(--muted)">${u.when}</div></div><div style="font-family:var(--sora);font-size:14px;font-weight:600">${u.time}</div></div>`).join('');
+}
+function getUp(){
+  const now=new Date(),res=[];
+  S.rems.filter(r=>r.enabled&&r.days.length).forEach(r=>{const[h,m]=r.time.split(':').map(Number);for(let o=0;o<=7;o++){const d=new Date(now);d.setDate(d.getDate()+o);d.setHours(h,m,0,0);if(d>now&&r.days.includes(d.getDay())){const df=d-now,dh=Math.floor(df/3600000),dm=Math.floor((df%3600000)/60000);const w=o===0?(dh>0?`${dh} 小時後`:`${dm} 分鐘後`):o===1?'明天':`週${DAYS[d.getDay()]}`;res.push({name:r.name,time:r.time,when:w});break;}}});
+  return res.slice(0,4);
+}
+function updNotifBtn(){const b=document.getElementById('notifBtn');if(!b)return;const p=Notification.permission;if(p==='granted'){b.textContent='✓ 通知已開啟';b.className='notif-btn granted';}else if(p==='denied'){b.textContent='✗ 已封鎖（請在手機設定開啟）';b.className='notif-btn denied';}else{b.textContent='允許推播通知';b.className='notif-btn';}}
+async function reqNotif(){if(Notification.permission==='granted')return;const p=await Notification.requestPermission();updNotifBtn();if(p==='granted')toast('通知已開啟','success');}
+function sendNotif(t,b){if(Notification.permission!=='granted')return;try{new Notification(t,{body:b,tag:'ledger',renotify:true});}catch{}}
+let _lf='';
+function startChecker(){chkNow();setInterval(chkNow,60000);}
+function chkNow(){const now=new Date(),hm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,k=now.toDateString()+hm;if(_lf===k)return;S.rems.forEach(r=>{if(!r.enabled||r.time!==hm||!r.days.includes(now.getDay()))return;sendNotif('📒 記帳提醒',r.name+' — 記得記今天的帳！');toast('🔔 '+r.name,'');_lf=k;});}
+
+function toast(msg,tp=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+tp;setTimeout(()=>t.className='toast',2800);}
+
+/* EDIT / DELETE TX */
+let _editTx=null;
+function openEditTxById(id){const tx=S.txCache[id];if(tx)openEditTx(tx);}
+function openEditTx(tx){
+  _editTx={...tx};
+  renderEditAcctBtns(tx.account||S.accounts[0]?.id||'personal');
+  setEtp(tx.type||'expense');
+  document.getElementById('eCurSel').value=tx.currency||'USD';
+  document.getElementById('eAmtInp').value=tx.amount||'';
+  document.getElementById('eNoteInp').value=tx.note||'';
+  document.getElementById('eDateInp').value=String(tx.date||'').slice(0,10);
+  renderECats(tx.account,tx.category);
+  const o=document.getElementById('editOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
+  document.getElementById('acctOv').classList.remove('open');
+}
+function renderEditAcctBtns(currentAc){
+  const el=document.getElementById('editAcctRow');if(!el)return;
+  el.innerHTML=S.accounts.map(a=>`<div class="facct-btn ${a.id===currentAc?'active '+a.catType:''}" id="editac-${a.id}" onclick="setEac('${a.id}')">${a.emoji} ${a.name}</div>`).join('');
+}
+function setEtp(t){_editTx&&(_editTx.type=t);document.querySelectorAll('#editOv .fseg-btn').forEach(b=>b.classList.remove('active'));const el=document.getElementById('etp-'+t);if(el)el.classList.add('active');renderECats(_editTx?_editTx.account:S.accounts[0]?.id,_editTx?_editTx.category:'');}
+function setEac(a){if(_editTx)_editTx.account=a;document.querySelectorAll('#editAcctRow .facct-btn').forEach(b=>b.classList.remove('active'));const el=document.getElementById('editac-'+a);if(el)el.classList.add('active');renderECats(a,_editTx?_editTx.category:'');}
+function renderECats(ac,selCat){
+  const c=document.getElementById('eCatPills');
+  const acct=S.accounts.find(x=>x.id===ac);
+  const ct=acct?acct.catType:'personal';
+  const list=S.cats.filter(x=>x.account===ac).length?S.cats.filter(x=>x.account===ac):(ct==='business'?[{name:'食材成本'},{name:'員工薪資'},{name:'外送平台費'},{name:'行銷廣告'},{name:'營業收入'}]:[{name:'餐飲'},{name:'交通'},{name:'購物'},{name:'娛樂'},{name:'住宿'},{name:'旅遊'},{name:'生活'},{name:'薪資收入'}]);
+  c.innerHTML=list.map(x=>`<div class="cat-pill ${x.name===selCat?'active':''}" data-cat="${x.name}" onclick="selECat('${x.name}')">${EMOJI[x.name]||'📝'} ${x.name}</div>`).join('');
+  if(_editTx)_editTx.category=selCat||'';
+}
+function selECat(n){if(_editTx)_editTx.category=n;document.querySelectorAll('#eCatPills .cat-pill').forEach(p=>p.classList.toggle('active',p.dataset.cat===n));}
+async function subEditTx(){
+  if(!_editTx)return;
+  const amt=parseFloat(document.getElementById('eAmtInp').value),cur=document.getElementById('eCurSel').value;
+  if(!amt||amt<=0){toast('請輸入金額','error');return;}
+  if(!_editTx.category){toast('請選擇分類','error');return;}
+  const btn=document.getElementById('eSub');btn.disabled=true;btn.textContent='處理中…';
+  const rate=S.rates[cur]||1;
+  const d={..._editTx,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,note:document.getElementById('eNoteInp').value,date:document.getElementById('eDateInp').value,type:_editTx.type,account:_editTx.account,category:_editTx.category};
+  try{
+    if(API){await apiP({action:'updateTransaction',data:d});}
+    else{const off=JSON.parse(localStorage.getItem('otx')||'[]');const idx=off.findIndex(t=>t.id===d.id);if(idx>=0)off[idx]=d;localStorage.setItem('otx',JSON.stringify(off));}
+    toast('修改成功','success');document.getElementById('editOv').classList.remove('open');await loadData();
+  }catch{toast('修改失敗，請重試','error');}finally{btn.disabled=false;btn.textContent='儲存修改';}
+}
+async function delTx(){
+  if(!_editTx)return;
+  if(!confirm('確定刪除這筆記帳？'))return;
+  try{
+    if(API){await apiP({action:'deleteTransaction',data:{id:_editTx.id}});}
+    else{const off=JSON.parse(localStorage.getItem('otx')||'[]');localStorage.setItem('otx',JSON.stringify(off.filter(t=>t.id!==_editTx.id)));}
+    toast('已刪除','success');document.getElementById('editOv').classList.remove('open');await loadData();
+  }catch{toast('刪除失敗','error');}
+}
+
+/* ACCOUNT DETAIL */
+function openAcctDetail(acctId){
+  const acct=S.accounts.find(x=>x.id===acctId);if(!acct)return;
+  const ico=document.getElementById('acctDetailIco');
+  ico.textContent=acct.emoji;ico.style.background=acct.color||'#f5f5f0';
+  document.getElementById('acctDetailName').textContent=acct.name;
+  document.getElementById('acctDetailSub').textContent=acct.sub;
+  const btn=document.getElementById('acctDetailEditBtn');if(btn)btn.dataset.acctid=acctId;
+  const txs=S.txs.filter(t=>t.account===acctId);
+  let inc=0,exp=0;
+  txs.forEach(t=>{const u=parseFloat(t.amount_usd)||0;if(t.type==='income')inc+=u;else exp+=u;});
+  const net=inc-exp;
+  document.getElementById('acctDetailInc').textContent=`$${inc.toFixed(2)}`;
+  document.getElementById('acctDetailExp').textContent=`$${exp.toFixed(2)}`;
+  const netEl=document.getElementById('acctDetailNet');
+  netEl.textContent=`${net>=0?'+':''}$${Math.abs(net).toFixed(2)}`;
+  netEl.style.color=net>=0?'var(--black)':'var(--red)';
+  const list=document.getElementById('acctDetailList');
+  if(!txs.length){list.innerHTML='<div class="empty"><div class="empty-emo">📭</div><div class="empty-txt">本月還沒有記錄</div></div>';
+  }else{
+    txs.forEach(tx=>{if(tx.id)S.txCache[tx.id]=tx;});
+    list.innerHTML=txs.map((tx,i)=>{
+      const inc=tx.type==='income',sign=inc?'+':'-',cls=inc?'income':'expense';
+      const em=EMOJI[tx.category]||'📝',bg=EBGS[tx.category]||'#f5f5f0',usd=parseFloat(tx.amount_usd)||0;
+      const cid=tx.id?`data-txid="${tx.id}"`:'';
+      return`<div class="tx-item" style="animation-delay:${i*.04}s" ${cid} onclick="openEditTxById(this.dataset.txid)"><div class="tx-emo" style="background:${bg}">${em}</div><div class="tx-info"><div class="tx-name">${tx.category||'未分類'}</div><div class="tx-meta">${String(tx.date).slice(0,10)}${tx.note?' · '+tx.note:''}</div></div><div class="tx-right"><div class="tx-amt ${cls}">${sign}${Number(tx.amount).toLocaleString()} ${tx.currency}</div><div class="tx-usd">≈ $${usd.toFixed(2)}</div></div></div>`;
+    }).join('');
+  }
+  const o=document.getElementById('acctOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
+}
+
+/* ACCOUNT TABS & CARDS */
+function saveAccounts(){localStorage.setItem(ACCK,JSON.stringify(S.accounts));}
+function renderAcctTabs(){
+  const el=document.getElementById('seg-tabs');if(!el)return;
+  el.innerHTML=`<div class="seg-tab ${S.av==='all'?'active':''}" onclick="setAV('all')">總覽</div>`+
+    S.accounts.map(a=>`<div class="seg-tab ${S.av===a.id?'active':''}" onclick="setAV('${a.id}')">${a.name}</div>`).join('');
+}
+function renderAcctCards(){
+  const el=document.getElementById('acctList');if(!el)return;
+  el.innerHTML=S.accounts.map(a=>`<div class="acct-row" onclick="openAcctDetail('${a.id}')"><div class="acct-left"><div class="acct-ico" style="background:${a.color||'#f5f5f0'}">${a.emoji}</div><div><div class="acct-name">${a.name}</div><div class="acct-sub">${a.sub}</div></div></div><div class="acct-right"><div class="acct-amt" id="bal-${a.id}">$0.00</div><div class="acct-chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>`).join('')+
+  `<div class="acct-row" onclick="openNewAcct()" style="border:1.5px dashed var(--border);background:transparent;box-shadow:none;"><div class="acct-left"><div class="acct-ico" style="background:var(--bg);font-size:22px;color:var(--muted)">＋</div><div><div class="acct-name" style="color:var(--muted)">新增帳戶</div></div></div></div>`;
+}
+
+/* ACCOUNT CRUD */
+function buildAcctEmojiPicker(sel){
+  document.getElementById('acctMgEmoji').innerHTML=ACCT_EMOJIS.map(e=>`<div class="ep ${e===sel?'active':''}" onclick="pickAcctEmo('${e}')">${e}</div>`).join('');
+}
+function pickAcctEmo(e){_acctEmoji=e;document.querySelectorAll('#acctMgEmoji .ep').forEach(el=>el.classList.toggle('active',el.textContent===e));}
+function setAcctCat(t){
+  _acctCat=t;
+  document.getElementById('acctCatP').classList.toggle('active',t==='personal');
+  document.getElementById('acctCatB').classList.toggle('active',t==='business');
+}
+function openNewAcct(){
+  _editAcctId=null;_acctCat='personal';_acctEmoji='💼';
+  document.getElementById('acctMgTitle').textContent='新增帳戶';
+  document.getElementById('acctMgDelBtn').style.display='none';
+  document.getElementById('acctMgSubmit').textContent='建立帳戶';
+  document.getElementById('acctMgName').value='';
+  document.getElementById('acctMgSubInp').value='';
+  buildAcctEmojiPicker('💼');setAcctCat('personal');
+  document.getElementById('acctOv').classList.remove('open');
+  const o=document.getElementById('acctMgOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
+}
+function openEditAcct(id){
+  const acct=S.accounts.find(x=>x.id===id);if(!acct)return;
+  _editAcctId=id;_acctCat=acct.catType||'personal';_acctEmoji=acct.emoji||'💼';
+  document.getElementById('acctMgTitle').textContent='編輯帳戶';
+  // 內建帳戶不可刪除
+  document.getElementById('acctMgDelBtn').style.display=(id==='personal'||id==='business')?'none':'block';
+  document.getElementById('acctMgSubmit').textContent='儲存修改';
+  document.getElementById('acctMgName').value=acct.name;
+  document.getElementById('acctMgSubInp').value=acct.sub;
+  buildAcctEmojiPicker(acct.emoji);setAcctCat(_acctCat);
+  document.getElementById('acctOv').classList.remove('open');
+  const o=document.getElementById('acctMgOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
+}
+function subAcct(){
+  const name=document.getElementById('acctMgName').value.trim();
+  if(!name){toast('請輸入帳戶名稱','error');return;}
+  const sub=document.getElementById('acctMgSubInp').value.trim();
+  const colorIdx=S.accounts.length%ACCT_COLORS.length;
+  if(_editAcctId){
+    const acct=S.accounts.find(x=>x.id===_editAcctId);
+    if(acct){acct.name=name;acct.sub=sub;acct.emoji=_acctEmoji;acct.catType=_acctCat;}
+    toast('帳戶已更新','success');
+  }else{
+    const id='acct'+Date.now();
+    S.accounts.push({id,name,emoji:_acctEmoji,sub,catType:_acctCat,color:ACCT_COLORS[colorIdx]});
+    toast('帳戶已建立','success');
+  }
+  saveAccounts();document.getElementById('acctMgOv').classList.remove('open');
+  renderAcctTabs();renderAcctCards();updABal(S.txs);
+}
+function delAcct(){
+  if(!_editAcctId||_editAcctId==='personal'||_editAcctId==='business')return;
+  if(!confirm('確定刪除此帳戶？相關交易不會刪除。'))return;
+  S.accounts=S.accounts.filter(x=>x.id!==_editAcctId);
+  saveAccounts();document.getElementById('acctMgOv').classList.remove('open');
+  if(S.av===_editAcctId)setAV('all');
+  else{renderAcctTabs();renderAcctCards();updABal(S.txs);}
+  toast('帳戶已刪除','success');
+}
+</script>
+</body>
+</html>
