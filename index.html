@@ -925,6 +925,8 @@ async function subEditTx(){
   try{
     if(API){await apiP({action:'updateTransaction',data:d});}
     else{const off=JSON.parse(localStorage.getItem('otx')||'[]');const idx=off.findIndex(t=>t.id===d.id);if(idx>=0)off[idx]=d;localStorage.setItem('otx',JSON.stringify(off));}
+    const newMo=String(d.date).slice(0,7);
+    if(newMo&&newMo!==S.mo){S.mo=newMo;updMoLbl();}
     toast('修改成功','success');document.getElementById('editOv').classList.remove('open');await loadData();
   }catch{toast('修改失敗，請重試','error');}finally{btn.disabled=false;btn.textContent='儲存修改';}
 }
