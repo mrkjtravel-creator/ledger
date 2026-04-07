@@ -932,20 +932,24 @@ async function subEditTx(){
   const d={..._editTx,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,note:document.getElementById('eNoteInp').value,date:(_eDate||document.getElementById('eDateInp').value),time:document.getElementById('eTimeInp').value||_editTx.time||'',type:_editTx.type,account:_editTx.account,category:_editTx.category};
   try{
     if(API){
-      try{
-        await apiP({action:'updateTransaction',data:d});
-      }catch(e){
-        // fallback: delete old + re-add
-        try{await apiP({action:'deleteTransaction',data:{id:d.id}});}catch{}
-        const nd={...d};delete nd.id;
-        await apiP({action:'addTransaction',data:nd});
-      }
-    }else{const off=JSON.parse(localStorage.getItem('otx')||'[]');const idx=off.findIndex(t=>t.id===d.id);if(idx>=0)off[idx]=d;else off.unshift(d);localStorage.setItem('otx',JSON.stringify(off));}
+      // 直接刪除舊資料再新增，完全跳過 updateTransaction
+      if(d.id){try{await apiP({action:'deleteTransaction',data:{id:d.id}});}catch{}}
+      const nd={...d};delete nd.id;
+      const res=await apiP({action:'addTransaction',data:nd});
+      // 更新本地快取中的 id
+      if(res&&res.id){const tx=S.txCache[d.id];if(tx)delete S.txCache[d.id];S.txCache[res.id]={...nd,id:res.id};}
+    }else{
+      const off=JSON.parse(localStorage.getItem('otx')||'[]');
+      const idx=off.findIndex(t=>t.id===d.id);
+      if(idx>=0)off[idx]=d;else off.unshift(d);
+      localStorage.setItem('otx',JSON.stringify(off));
+    }
     document.getElementById('editOv').classList.remove('open');
     const newMo=String(d.date).slice(0,7);
     if(newMo&&newMo!==S.mo){S.mo=newMo;updMoLbl();}
+    await new Promise(r=>setTimeout(r,600));
     await loadData();
-    toast('修改成功：'+d.date,'success');
+    toast('修改成功','success');
   }catch(err){toast('修改失敗：'+(err&&err.message||'請重試'),'error');}finally{btn.disabled=false;btn.textContent='儲存修改';}
 }
 async function delTx(){
