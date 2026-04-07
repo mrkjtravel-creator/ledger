@@ -515,8 +515,8 @@ function setAV(a){
   renderTxs(S.txs,'txList');updSum(S.txs);updABal(S.txs);
 }
 
-async function apiG(p){if(!API)throw 0;return(await fetch(API+'?'+new URLSearchParams(p))).json();}
-async function apiP(b){if(!API)throw 0;return(await fetch(API,{method:'POST',body:JSON.stringify(b)})).json();}
+async function apiG(p){if(!API)throw 0;const r=await(await fetch(API+'?'+new URLSearchParams(p))).json();if(r&&r.error)throw new Error(r.error);return r;}
+async function apiP(b){if(!API)throw 0;const r=await(await fetch(API,{method:'POST',body:JSON.stringify(b)})).json();if(r&&r.error)throw new Error(r.error);return r;}
 
 function setSyncStatus(state){
   const dot=document.getElementById('syncDot'),txt=document.getElementById('syncTxt'),badge=document.getElementById('syncBadge');
@@ -924,11 +924,13 @@ async function subEditTx(){
   const d={..._editTx,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,note:document.getElementById('eNoteInp').value,date:document.getElementById('eDateInp').value,time:document.getElementById('eTimeInp').value||_editTx.time||'',type:_editTx.type,account:_editTx.account,category:_editTx.category};
   try{
     if(API){await apiP({action:'updateTransaction',data:d});}
-    else{const off=JSON.parse(localStorage.getItem('otx')||'[]');const idx=off.findIndex(t=>t.id===d.id);if(idx>=0)off[idx]=d;localStorage.setItem('otx',JSON.stringify(off));}
+    else{const off=JSON.parse(localStorage.getItem('otx')||'[]');const idx=off.findIndex(t=>t.id===d.id);if(idx>=0)off[idx]=d;else off.unshift(d);localStorage.setItem('otx',JSON.stringify(off));}
+    document.getElementById('editOv').classList.remove('open');
     const newMo=String(d.date).slice(0,7);
     if(newMo&&newMo!==S.mo){S.mo=newMo;updMoLbl();}
-    toast('修改成功','success');document.getElementById('editOv').classList.remove('open');await loadData();
-  }catch{toast('修改失敗，請重試','error');}finally{btn.disabled=false;btn.textContent='儲存修改';}
+    await loadData();
+    toast('修改成功','success');
+  }catch(err){toast('修改失敗：'+(err&&err.message||'請重試'),'error');}finally{btn.disabled=false;btn.textContent='儲存修改';}
 }
 async function delTx(){
   if(!_editTx)return;
@@ -937,7 +939,7 @@ async function delTx(){
     if(API){await apiP({action:'deleteTransaction',data:{id:_editTx.id}});}
     else{const off=JSON.parse(localStorage.getItem('otx')||'[]');localStorage.setItem('otx',JSON.stringify(off.filter(t=>t.id!==_editTx.id)));}
     toast('已刪除','success');document.getElementById('editOv').classList.remove('open');await loadData();
-  }catch{toast('刪除失敗','error');}
+  }catch(err){toast('刪除失敗：'+(err&&err.message||'請重試'),'error');}
 }
 
 /* ACCOUNT DETAIL */
