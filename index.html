@@ -375,7 +375,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--noto);min-height:1
   <div class="fg"><label class="flbl">帳戶</label><div class="facct-row" id="editAcctRow"></div></div>
   <div class="fg"><label class="flbl">分類</label><div class="cat-pills" id="eCatPills"></div></div>
   <div class="fg"><label class="flbl">備註</label><input class="finp" id="eNoteInp" type="text" placeholder="選填"></div>
-  <div class="fg" style="display:flex;gap:10px"><div style="flex:1"><label class="flbl">日期</label><input class="finp" id="eDateInp" type="date"></div><div style="flex:1"><label class="flbl">時間</label><input class="finp" id="eTimeInp" type="time"></div></div>
+  <div class="fg" style="display:flex;gap:10px"><div style="flex:1"><label class="flbl">日期</label><input class="finp" id="eDateInp" type="date" oninput="_eDate=this.value;document.getElementById('eDateDisp').textContent=this.value;" onchange="_eDate=this.value;document.getElementById('eDateDisp').textContent=this.value;"><div id="eDateDisp" style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center;"></div></div><div style="flex:1"><label class="flbl">時間</label><input class="finp" id="eTimeInp" type="time"></div></div>
   <button class="fsub" id="eSub" onclick="subEditTx()">儲存修改</button>
  </div>
 </div>
@@ -884,7 +884,7 @@ async function checkUpdate(){
 function toast(msg,tp=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+tp;setTimeout(()=>t.className='toast',2800);}
 
 /* EDIT / DELETE TX */
-let _editTx=null;
+let _editTx=null,_eDate='';
 function openEditTxById(id){const tx=S.txCache[id];if(tx)openEditTx(tx);}
 function openEditTxByIdx(i){const tx=S._txRender&&S._txRender[i];if(tx)openEditTx(tx);else toast('找不到交易資料（idx:'+i+'）','error');}
 function openEditTx(tx){
@@ -895,7 +895,9 @@ function openEditTx(tx){
     document.getElementById('eCurSel').value=tx.currency||'USD';
     document.getElementById('eAmtInp').value=tx.amount||'';
     document.getElementById('eNoteInp').value=tx.note||'';
-    document.getElementById('eDateInp').value=String(tx.date||'').slice(0,10);
+    _eDate=String(tx.date||'').slice(0,10);
+    document.getElementById('eDateInp').value=_eDate;
+    document.getElementById('eDateDisp').textContent=_eDate;
     document.getElementById('eTimeInp').value=tx.time||'';
     renderECats(tx.account,tx.category);
     const o=document.getElementById('editOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
@@ -924,7 +926,7 @@ async function subEditTx(){
   if(!_editTx.category){toast('請選擇分類','error');return;}
   const btn=document.getElementById('eSub');btn.disabled=true;btn.textContent='處理中…';
   const rate=S.rates[cur]||1;
-  const d={..._editTx,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,note:document.getElementById('eNoteInp').value,date:document.getElementById('eDateInp').value,time:document.getElementById('eTimeInp').value||_editTx.time||'',type:_editTx.type,account:_editTx.account,category:_editTx.category};
+  const d={..._editTx,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,note:document.getElementById('eNoteInp').value,date:(_eDate||document.getElementById('eDateInp').value),time:document.getElementById('eTimeInp').value||_editTx.time||'',type:_editTx.type,account:_editTx.account,category:_editTx.category};
   try{
     if(API){
       try{
