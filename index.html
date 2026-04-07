@@ -515,7 +515,7 @@ function setAV(a){
   renderTxs(S.txs,'txList');updSum(S.txs);updABal(S.txs);
 }
 
-async function apiG(p){if(!API)throw 0;const r=await(await fetch(API+'?'+new URLSearchParams(p))).json();if(r&&r.error)throw new Error(r.error);return r;}
+async function apiG(p){if(!API)throw 0;const r=await(await fetch(API+'?'+new URLSearchParams({...p,_t:Date.now()}))).json();if(r&&r.error)throw new Error(r.error);return r;}
 async function apiP(b){if(!API)throw 0;const r=await(await fetch(API,{method:'POST',body:JSON.stringify(b)})).json();if(r&&r.error)throw new Error(r.error);return r;}
 
 function setSyncStatus(state){
@@ -940,7 +940,7 @@ async function subEditTx(){
     const newMo=String(d.date).slice(0,7);
     if(newMo&&newMo!==S.mo){S.mo=newMo;updMoLbl();}
     await loadData();
-    toast('修改成功','success');
+    toast('修改成功：'+d.date,'success');
   }catch(err){toast('修改失敗：'+(err&&err.message||'請重試'),'error');}finally{btn.disabled=false;btn.textContent='儲存修改';}
 }
 async function delTx(){
