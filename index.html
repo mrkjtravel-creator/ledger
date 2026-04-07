@@ -923,8 +923,16 @@ async function subEditTx(){
   const rate=S.rates[cur]||1;
   const d={..._editTx,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,note:document.getElementById('eNoteInp').value,date:document.getElementById('eDateInp').value,time:document.getElementById('eTimeInp').value||_editTx.time||'',type:_editTx.type,account:_editTx.account,category:_editTx.category};
   try{
-    if(API){await apiP({action:'updateTransaction',data:d});}
-    else{const off=JSON.parse(localStorage.getItem('otx')||'[]');const idx=off.findIndex(t=>t.id===d.id);if(idx>=0)off[idx]=d;else off.unshift(d);localStorage.setItem('otx',JSON.stringify(off));}
+    if(API){
+      try{
+        await apiP({action:'updateTransaction',data:d});
+      }catch(e){
+        // fallback: delete old + re-add
+        try{await apiP({action:'deleteTransaction',data:{id:d.id}});}catch{}
+        const nd={...d};delete nd.id;
+        await apiP({action:'addTransaction',data:nd});
+      }
+    }else{const off=JSON.parse(localStorage.getItem('otx')||'[]');const idx=off.findIndex(t=>t.id===d.id);if(idx>=0)off[idx]=d;else off.unshift(d);localStorage.setItem('otx',JSON.stringify(off));}
     document.getElementById('editOv').classList.remove('open');
     const newMo=String(d.date).slice(0,7);
     if(newMo&&newMo!==S.mo){S.mo=newMo;updMoLbl();}
