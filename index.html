@@ -886,19 +886,21 @@ function toast(msg,tp=''){const t=document.getElementById('toast');t.textContent
 /* EDIT / DELETE TX */
 let _editTx=null;
 function openEditTxById(id){const tx=S.txCache[id];if(tx)openEditTx(tx);}
-function openEditTxByIdx(i){const tx=S._txRender&&S._txRender[i];if(tx)openEditTx(tx);}
+function openEditTxByIdx(i){const tx=S._txRender&&S._txRender[i];if(tx)openEditTx(tx);else toast('找不到交易資料（idx:'+i+'）','error');}
 function openEditTx(tx){
-  _editTx={...tx};
-  renderEditAcctBtns(tx.account||S.accounts[0]?.id||'personal');
-  setEtp(tx.type||'expense');
-  document.getElementById('eCurSel').value=tx.currency||'USD';
-  document.getElementById('eAmtInp').value=tx.amount||'';
-  document.getElementById('eNoteInp').value=tx.note||'';
-  document.getElementById('eDateInp').value=String(tx.date||'').slice(0,10);
-  document.getElementById('eTimeInp').value=tx.time||'';
-  renderECats(tx.account,tx.category);
-  const o=document.getElementById('editOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
-  document.getElementById('acctOv').classList.remove('open');
+  try{
+    _editTx={...tx};
+    renderEditAcctBtns(tx.account||S.accounts[0]?.id||'personal');
+    setEtp(tx.type||'expense');
+    document.getElementById('eCurSel').value=tx.currency||'USD';
+    document.getElementById('eAmtInp').value=tx.amount||'';
+    document.getElementById('eNoteInp').value=tx.note||'';
+    document.getElementById('eDateInp').value=String(tx.date||'').slice(0,10);
+    document.getElementById('eTimeInp').value=tx.time||'';
+    renderECats(tx.account,tx.category);
+    const o=document.getElementById('editOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
+    document.getElementById('acctOv').classList.remove('open');
+  }catch(e){toast('開啟編輯失敗：'+e.message,'error');}
 }
 function renderEditAcctBtns(currentAc){
   const el=document.getElementById('editAcctRow');if(!el)return;
