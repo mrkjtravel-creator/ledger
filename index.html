@@ -489,7 +489,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   S.goals=JSON.parse(localStorage.getItem(GK)||'[]');
   S.accounts=JSON.parse(localStorage.getItem(ACCK)||'null')||[
     {id:'personal',name:'個人',emoji:'👤',sub:'生活支出',catType:'personal',color:'#eff4ff'},
-    {id:'business',name:'Daily Nham',emoji:'🍱',sub:'餐廳業務',catType:'business',color:'#fff4e6'}
+    {id:'business',name:'公司',emoji:'💼',sub:'業務帳戶',catType:'business',color:'#fff4e6'}
   ];
   S.ac=S.accounts[0]?.id||'personal';
   S.statMo=S.mo;
@@ -1039,7 +1039,7 @@ function renderAcctTabs(){
 }
 function renderAcctCards(){
   const el=document.getElementById('acctList');if(!el)return;
-  const canDel=id=>id!=='personal'&&id!=='business';
+  const canDel=id=>id!=='personal';
   el.innerHTML=S.accounts.map(a=>`<div class="acct-row" style="position:relative" onclick="${_acctManageMode?'':'openAcctDetail(\''+a.id+'\')'}"><div class="acct-left"><div class="acct-ico" style="background:${a.color||'#f5f5f0'}">${a.emoji}</div><div><div class="acct-name">${a.name}</div><div class="acct-sub">${a.sub}</div></div></div><div class="acct-right">${_acctManageMode?`<button onclick="quickDelAcct('${a.id}',event)" style="background:#fff4f4;border:none;color:var(--red);font-size:12px;font-family:var(--sora);font-weight:600;padding:6px 12px;border-radius:16px;cursor:pointer;${canDel(a.id)?'':'opacity:.3;pointer-events:none;'}">刪除</button>`:`<div class="acct-amt" id="bal-${a.id}">$0.00</div><div class="acct-chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>`}</div></div>`).join('');
   if(!_acctManageMode)el.innerHTML+=`<div class="acct-row" onclick="openNewAcct()" style="border:1.5px dashed var(--border);background:transparent;box-shadow:none;"><div class="acct-left"><div class="acct-ico" style="background:var(--bg);font-size:22px;color:var(--muted)">＋</div><div><div class="acct-name" style="color:var(--muted)">新增帳戶</div></div></div></div>`;
 }
@@ -1070,7 +1070,7 @@ function openEditAcct(id){
   _editAcctId=id;_acctCat=acct.catType||'personal';_acctEmoji=acct.emoji||'💼';
   document.getElementById('acctMgTitle').textContent='編輯帳戶';
   // 內建帳戶不可刪除
-  document.getElementById('acctMgDelBtn').style.display=(id==='personal'||id==='business')?'none':'block';
+  document.getElementById('acctMgDelBtn').style.display=id==='personal'?'none':'block';
   document.getElementById('acctMgSubmit').textContent='儲存修改';
   document.getElementById('acctMgName').value=acct.name;
   document.getElementById('acctMgSubInp').value=acct.sub;
@@ -1096,7 +1096,7 @@ function subAcct(){
   renderAcctTabs();renderAcctCards();updABal(S.txs);
 }
 function delAcct(){
-  if(!_editAcctId||_editAcctId==='personal'||_editAcctId==='business')return;
+  if(!_editAcctId||_editAcctId==='personal')return;
   if(!confirm('確定刪除此帳戶？相關交易不會刪除。'))return;
   S.accounts=S.accounts.filter(x=>x.id!==_editAcctId);
   saveAccounts();document.getElementById('acctMgOv').classList.remove('open');
@@ -1106,7 +1106,7 @@ function delAcct(){
 }
 function quickDelAcct(id,e){
   e.stopPropagation();
-  if(id==='personal'||id==='business'){toast('預設帳戶不可刪除','error');return;}
+  if(id==='personal'){toast('預設帳戶不可刪除','error');return;}
   if(!confirm('確定刪除此帳戶？相關交易不會刪除。'))return;
   S.accounts=S.accounts.filter(x=>x.id!==id);
   saveAccounts();
