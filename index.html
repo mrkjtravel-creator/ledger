@@ -459,6 +459,8 @@ const AK='ledger_api_url',GK='ledger_goals',ACCK='ledger_accounts';
 const ACCT_EMOJIS=['👤','🍱','🏦','💼','🏠','🎯','💰','🛒','🌟','🎨','✈️','🚗','🍎','📱','🎓','💡'];
 const ACCT_COLORS=['#eff4ff','#fff4e6','#e8f5e9','#fce4ec','#f3e8ff','#e0f7fa','#fff8e1','#f5f0ff'];
 const DAYS=['日','一','二','三','四','五','六'];
+function localDateStr(d=new Date()){const z=n=>('0'+n).slice(-2);return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;}
+
 const GEMOJI=['🎯','✈️','🏠','🚗','💻','📱','🎓','💍','👶','🌴','🎮','🏋️','🐶','🎸','💰','🏦','🛍️','🎁'];
 const GBGS=['#e8f5e9','#fff3e0','#eff4ff','#fce4ec','#f5f3ff','#fff8e1','#e0f7fa'];
 const EMOJI={'餐飲':'🍜','交通':'🚗','購物':'🛍️','娛樂':'🎮','薪資收入':'💰','住宿':'🏨','旅遊':'✈️','生活':'🧴','食材成本':'🥩','員工薪資':'👤','外送平台費':'📦','行銷廣告':'📣','營業收入':'💵'};
@@ -470,8 +472,8 @@ let _editAcctId=null,_acctCat='personal',_acctEmoji='💼';
 document.addEventListener('DOMContentLoaded',()=>{
   const now=new Date();
   S.mo=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById('dateInp').value=now.toISOString().split('T')[0];
-  document.getElementById('depDate').value=now.toISOString().split('T')[0];
+  document.getElementById('dateInp').value=localDateStr(now);
+  document.getElementById('depDate').value=localDateStr(now);
   document.getElementById('apiInp').value=API;
   const khr=localStorage.getItem('rKHR'),twd=localStorage.getItem('rTWD');
   if(khr){S.rates.KHR=1/+khr;document.getElementById('rKHR').value=khr;document.getElementById('rKHRsub').textContent='1 USD = '+khr+' KHR';}
@@ -717,7 +719,7 @@ function openDep(gid){
   document.getElementById('depGName').textContent=g.emoji+' '+g.name;
   document.getElementById('depGRem').textContent=rem>0?`還差 $${rem.toFixed(2)} 達成目標`:'🎉 目標已達成！';
   document.getElementById('depAmt').value='';document.getElementById('depNote').value='';
-  document.getElementById('depDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('depDate').value=localDateStr();
   const o=document.getElementById('depOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
 }
 function subDep(){
