@@ -550,13 +550,13 @@ function renderTxs(txs,tid){
   const el=document.getElementById(tid);if(!el)return;
   let f=txs;if(S.av!=='all')f=txs.filter(t=>t.account===S.av);f=[...f].sort((a,b)=>{const da=String(a.date).slice(0,10)+(a.time||'00:00'),db=String(b.date).slice(0,10)+(b.time||'00:00');if(db!==da)return db.localeCompare(da);return String(b.id||'').localeCompare(String(a.id||''));});
   if(!f.length){el.innerHTML='<div class="empty"><div class="empty-emo">📭</div><div class="empty-txt">這個月還沒有記錄<br>點 + 開始記帳吧</div></div>';return;}
+  S._txRender=f;
   f.forEach(tx=>{if(tx.id)S.txCache[tx.id]=tx;});
   el.innerHTML=f.map((tx,i)=>{
     const inc=tx.type==='income',sign=inc?'+':'-',cls=inc?'income':'expense';
     const em=EMOJI[tx.category]||'📝',bg=EBGS[tx.category]||'#f5f5f0',usd=parseFloat(tx.amount_usd)||0;
-    const cid=tx.id?`data-txid="${tx.id}"`:'';
     const acctName=(S.accounts.find(a=>a.id===tx.account)||{}).name||tx.account||'';
-    return`<div class="tx-item" style="animation-delay:${i*.04}s" ${cid} onclick="openEditTxById(this.dataset.txid)"><div class="tx-emo" style="background:${bg}">${em}</div><div class="tx-info"><div class="tx-name">${tx.category||'未分類'}</div><div class="tx-meta">${String(tx.date).slice(0,10)}${tx.time?' '+tx.time:''}${tx.note?' · '+tx.note:''}</div><span class="tx-badge ${tx.account}">${acctName}</span></div><div class="tx-right"><div class="tx-amt ${cls}">${sign}${Number(tx.amount).toLocaleString()} ${tx.currency}</div><div class="tx-usd">≈ $${usd.toFixed(2)}</div>${tx.receipt_url?`<a href="${tx.receipt_url}" target="_blank" style="font-size:10px;color:#1aad5e">📎</a>`:''}</div></div>`;
+    return`<div class="tx-item" style="animation-delay:${i*.04}s" data-txi="${i}" onclick="openEditTxByIdx(+this.dataset.txi)"><div class="tx-emo" style="background:${bg}">${em}</div><div class="tx-info"><div class="tx-name">${tx.category||'未分類'}</div><div class="tx-meta">${String(tx.date).slice(0,10)}${tx.time?' '+tx.time:''}${tx.note?' · '+tx.note:''}</div><span class="tx-badge ${tx.account}">${acctName}</span></div><div class="tx-right"><div class="tx-amt ${cls}">${sign}${Number(tx.amount).toLocaleString()} ${tx.currency}</div><div class="tx-usd">≈ $${usd.toFixed(2)}</div>${tx.receipt_url?`<a href="${tx.receipt_url}" target="_blank" style="font-size:10px;color:#1aad5e">📎</a>`:''}</div></div>`;
   }).join('');
 }
 function updSum(txs){
@@ -886,6 +886,7 @@ function toast(msg,tp=''){const t=document.getElementById('toast');t.textContent
 /* EDIT / DELETE TX */
 let _editTx=null;
 function openEditTxById(id){const tx=S.txCache[id];if(tx)openEditTx(tx);}
+function openEditTxByIdx(i){const tx=S._txRender&&S._txRender[i];if(tx)openEditTx(tx);}
 function openEditTx(tx){
   _editTx={...tx};
   renderEditAcctBtns(tx.account||S.accounts[0]?.id||'personal');
