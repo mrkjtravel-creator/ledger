@@ -375,7 +375,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--noto);min-height:1
   <div class="fg"><label class="flbl">帳戶</label><div class="facct-row" id="editAcctRow"></div></div>
   <div class="fg"><label class="flbl">分類</label><div class="cat-pills" id="eCatPills"></div></div>
   <div class="fg"><label class="flbl">備註</label><input class="finp" id="eNoteInp" type="text" placeholder="選填"></div>
-  <div class="fg"><label class="flbl">日期</label><input class="finp" id="eDateInp" type="date"></div>
+  <div class="fg" style="display:flex;gap:10px"><div style="flex:1"><label class="flbl">日期</label><input class="finp" id="eDateInp" type="date"></div><div style="flex:1"><label class="flbl">時間</label><input class="finp" id="eTimeInp" type="time"></div></div>
   <button class="fsub" id="eSub" onclick="subEditTx()">儲存修改</button>
  </div>
 </div>
@@ -555,7 +555,8 @@ function renderTxs(txs,tid){
     const inc=tx.type==='income',sign=inc?'+':'-',cls=inc?'income':'expense';
     const em=EMOJI[tx.category]||'📝',bg=EBGS[tx.category]||'#f5f5f0',usd=parseFloat(tx.amount_usd)||0;
     const cid=tx.id?`data-txid="${tx.id}"`:'';
-    return`<div class="tx-item" style="animation-delay:${i*.04}s" ${cid} onclick="openEditTxById(this.dataset.txid)"><div class="tx-emo" style="background:${bg}">${em}</div><div class="tx-info"><div class="tx-name">${tx.category||'未分類'}</div><div class="tx-meta">${String(tx.date).slice(0,10)}${tx.time?' '+tx.time:''}${tx.note?' · '+tx.note:''}</div><span class="tx-badge ${tx.account}">${tx.account==='personal'?'個人':'Daily Nham'}</span></div><div class="tx-right"><div class="tx-amt ${cls}">${sign}${Number(tx.amount).toLocaleString()} ${tx.currency}</div><div class="tx-usd">≈ $${usd.toFixed(2)}</div>${tx.receipt_url?`<a href="${tx.receipt_url}" target="_blank" style="font-size:10px;color:#1aad5e">📎</a>`:''}</div></div>`;
+    const acctName=(S.accounts.find(a=>a.id===tx.account)||{}).name||tx.account||'';
+    return`<div class="tx-item" style="animation-delay:${i*.04}s" ${cid} onclick="openEditTxById(this.dataset.txid)"><div class="tx-emo" style="background:${bg}">${em}</div><div class="tx-info"><div class="tx-name">${tx.category||'未分類'}</div><div class="tx-meta">${String(tx.date).slice(0,10)}${tx.time?' '+tx.time:''}${tx.note?' · '+tx.note:''}</div><span class="tx-badge ${tx.account}">${acctName}</span></div><div class="tx-right"><div class="tx-amt ${cls}">${sign}${Number(tx.amount).toLocaleString()} ${tx.currency}</div><div class="tx-usd">≈ $${usd.toFixed(2)}</div>${tx.receipt_url?`<a href="${tx.receipt_url}" target="_blank" style="font-size:10px;color:#1aad5e">📎</a>`:''}</div></div>`;
   }).join('');
 }
 function updSum(txs){
@@ -893,6 +894,7 @@ function openEditTx(tx){
   document.getElementById('eAmtInp').value=tx.amount||'';
   document.getElementById('eNoteInp').value=tx.note||'';
   document.getElementById('eDateInp').value=String(tx.date||'').slice(0,10);
+  document.getElementById('eTimeInp').value=tx.time||'';
   renderECats(tx.account,tx.category);
   const o=document.getElementById('editOv');o.classList.add('open');o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
   document.getElementById('acctOv').classList.remove('open');
@@ -919,7 +921,7 @@ async function subEditTx(){
   if(!_editTx.category){toast('請選擇分類','error');return;}
   const btn=document.getElementById('eSub');btn.disabled=true;btn.textContent='處理中…';
   const rate=S.rates[cur]||1;
-  const d={..._editTx,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,note:document.getElementById('eNoteInp').value,date:document.getElementById('eDateInp').value,type:_editTx.type,account:_editTx.account,category:_editTx.category};
+  const d={..._editTx,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,note:document.getElementById('eNoteInp').value,date:document.getElementById('eDateInp').value,time:document.getElementById('eTimeInp').value||_editTx.time||'',type:_editTx.type,account:_editTx.account,category:_editTx.category};
   try{
     if(API){await apiP({action:'updateTransaction',data:d});}
     else{const off=JSON.parse(localStorage.getItem('otx')||'[]');const idx=off.findIndex(t=>t.id===d.id);if(idx>=0)off[idx]=d;localStorage.setItem('otx',JSON.stringify(off));}
