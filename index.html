@@ -602,7 +602,7 @@ async function subTx(){
     let ru='';
     if(S.rf&&API){const b=await f64(S.rf);const up=await apiP({action:'uploadReceipt',data:{base64:b,mimeType:S.rf.type,filename:'rec_'+Date.now()+'.jpg'}});ru=up.url||'';}
     const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),timeStr=hh+':'+mm;
-    const rate=S.rates[cur]||1,d={date,time:timeStr,type:S.tp,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,category:S.cat,note,account:S.ac,receipt_url:ru};
+    const rate=S.rates[cur]||1,d={date:date+'T12:00:00',time:timeStr,type:S.tp,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,category:S.cat,note,account:S.ac,receipt_url:ru};
     if(API)await apiP({action:'addTransaction',data:d});
     else{const off=JSON.parse(localStorage.getItem('otx')||'[]');off.unshift({...d,id:'l'+Date.now()});localStorage.setItem('otx',JSON.stringify(off));}
     setSyncStatus('ok');toast('記帳成功','success');document.getElementById('addOv').classList.remove('open');
@@ -935,7 +935,7 @@ async function subEditTx(){
   if(!_editTx.category){toast('請選擇分類','error');return;}
   const btn=document.getElementById('eSub');btn.disabled=true;btn.textContent='處理中…';
   const rate=S.rates[cur]||1;
-  const d={..._editTx,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,note:document.getElementById('eNoteInp').value,date:(_eDate||document.getElementById('eDateInp').value),time:document.getElementById('eTimeInp').value||_editTx.time||'',type:_editTx.type,account:_editTx.account,category:_editTx.category};
+  const d={..._editTx,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,note:document.getElementById('eNoteInp').value,date:(_eDate||document.getElementById('eDateInp').value)+'T12:00:00',time:document.getElementById('eTimeInp').value||_editTx.time||'',type:_editTx.type,account:_editTx.account,category:_editTx.category};
   try{
     if(API){
       // 直接刪除舊資料再新增，完全跳過 updateTransaction
