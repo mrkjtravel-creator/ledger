@@ -237,6 +237,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--noto);min-height:1
      </div>
     </div>
     <div class="topbar-actions">
+     <div class="topbar-icon" onclick="openNewAcct()" title="新增帳本"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+     <div class="topbar-icon" onclick="toggleAcctManage()" id="acctManageBtn" title="管理帳本"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.5" fill="var(--black)" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="var(--black)" stroke="none"/><circle cx="12" cy="18" r="1.5" fill="var(--black)" stroke="none"/></svg></div>
      <div class="topbar-icon" onclick="showPage('stats')"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
     </div>
    </div>
@@ -357,7 +359,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--noto);min-height:1
   <div class="fg"><label class="flbl">帳戶</label><div class="facct-row" id="addAcctRow"></div></div>
   <div class="fg"><label class="flbl">分類</label><div class="cat-pills" id="catPills"></div></div>
   <div class="fg"><label class="flbl">備註</label><input class="finp" id="noteInp" type="text" placeholder="選填"></div>
-  <div class="fg"><label class="flbl">日期</label><input class="finp" id="dateInp" type="date"></div>
+  <div class="fg" style="display:flex;gap:10px">
+    <div style="flex:2"><label class="flbl">日期</label><div style="display:flex;align-items:center;gap:4px"><button type="button" onclick="adjAddDate(-1)" style="width:32px;height:38px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:16px;cursor:pointer;flex-shrink:0">‹</button><input class="finp" id="dateInp" type="text" style="text-align:center;flex:1" placeholder="YYYY-MM-DD" oninput="_aDate=this.value"><button type="button" onclick="adjAddDate(1)" style="width:32px;height:38px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:16px;cursor:pointer;flex-shrink:0">›</button></div></div>
+    <div style="flex:1"><label class="flbl">時間</label><input class="finp" id="timeInp" type="time"></div>
+  </div>
   <button class="fsub" id="fSub" onclick="subTx()">記帳</button>
  </div>
 </div>
@@ -376,7 +381,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--noto);min-height:1
   <div class="fg"><label class="flbl">分類</label><div class="cat-pills" id="eCatPills"></div></div>
   <div class="fg"><label class="flbl">備註</label><input class="finp" id="eNoteInp" type="text" placeholder="選填"></div>
   <div class="fg" style="display:flex;gap:10px">
-    <div style="flex:1"><label class="flbl">日期</label><div style="display:flex;align-items:center;gap:4px"><button type="button" onclick="adjDate(-1)" style="width:32px;height:38px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:16px;cursor:pointer;flex-shrink:0">‹</button><input class="finp" id="eDateInp" type="text" style="text-align:center;flex:1" placeholder="YYYY-MM-DD" oninput="_eDate=this.value"><button type="button" onclick="adjDate(1)" style="width:32px;height:38px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:16px;cursor:pointer;flex-shrink:0">›</button></div></div>
+    <div style="flex:2"><label class="flbl">日期</label><div style="display:flex;align-items:center;gap:4px"><button type="button" onclick="adjDate(-1)" style="width:32px;height:38px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:16px;cursor:pointer;flex-shrink:0">‹</button><input class="finp" id="eDateInp" type="text" style="text-align:center;flex:1" placeholder="YYYY-MM-DD" oninput="_eDate=this.value"><button type="button" onclick="adjDate(1)" style="width:32px;height:38px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:16px;cursor:pointer;flex-shrink:0">›</button></div></div>
     <div style="flex:1"><label class="flbl">時間</label><input class="finp" id="eTimeInp" type="time"></div>
   </div>
   <button class="fsub" id="eSub" onclick="subEditTx()">儲存修改</button>
@@ -575,6 +580,11 @@ function updABal(txs){
 
 /* ADD TX */
 function openAdd(){
+  const now=new Date();
+  _aDate=localDateStr(now);
+  document.getElementById('dateInp').value=_aDate;
+  const hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('timeInp').value=hh+':'+mm;
   const o=document.getElementById('addOv');o.classList.add('open');
   renderAddAcctBtns();renderCats();
   o.onclick=e=>{if(e.target===o)o.classList.remove('open');};
@@ -595,13 +605,13 @@ function renderCats(){
 }
 function f64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});}
 async function subTx(){
-  const amt=parseFloat(document.getElementById('amtInp').value),cur=document.getElementById('curSel').value,note=document.getElementById('noteInp').value,date=document.getElementById('dateInp').value;
+  const amt=parseFloat(document.getElementById('amtInp').value),cur=document.getElementById('curSel').value,note=document.getElementById('noteInp').value,date=(_aDate||document.getElementById('dateInp').value);
   if(!amt||amt<=0){toast('請輸入金額','error');return;}if(!S.cat){toast('請選擇分類','error');return;}
   const btn=document.getElementById('fSub');btn.disabled=true;btn.textContent='處理中…';
   try{
     let ru='';
     if(S.rf&&API){const b=await f64(S.rf);const up=await apiP({action:'uploadReceipt',data:{base64:b,mimeType:S.rf.type,filename:'rec_'+Date.now()+'.jpg'}});ru=up.url||'';}
-    const now=new Date(),hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0'),timeStr=hh+':'+mm;
+    const _tn=new Date(),timeStr=document.getElementById('timeInp').value||(String(_tn.getHours()).padStart(2,'0')+':'+String(_tn.getMinutes()).padStart(2,'0'));
     const rate=S.rates[cur]||1,d={date:date+'T12:00:00',time:timeStr,type:S.tp,amount:amt,currency:cur,amount_usd:Math.round(amt*rate*100)/100,category:S.cat,note,account:S.ac,receipt_url:ru};
     if(API)await apiP({action:'addTransaction',data:d});
     else{const off=JSON.parse(localStorage.getItem('otx')||'[]');off.unshift({...d,id:'l'+Date.now()});localStorage.setItem('otx',JSON.stringify(off));}
@@ -886,8 +896,26 @@ async function checkUpdate(){
 
 function toast(msg,tp=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+tp;setTimeout(()=>t.className='toast',2800);}
 
+/* ACCOUNT MANAGE MODE */
+let _acctManageMode=false;
+function toggleAcctManage(){
+  _acctManageMode=!_acctManageMode;
+  const btn=document.getElementById('acctManageBtn');
+  if(btn)btn.style.background=_acctManageMode?'var(--black)':'var(--white)';
+  if(btn){const svgs=btn.querySelectorAll('circle');svgs.forEach(c=>c.setAttribute('fill',_acctManageMode?'#fff':'var(--black)'));}
+  renderAcctCards();
+}
+
 /* EDIT / DELETE TX */
 let _editTx=null,_eDate='';
+let _aDate='';
+function adjAddDate(days){
+  const s=_aDate||localDateStr();
+  const [y,m,d]=s.split('-').map(Number);
+  const dt=new Date(y,m-1,d+days);
+  _aDate=localDateStr(dt);
+  document.getElementById('dateInp').value=_aDate;
+}
 function adjDate(days){
   const s=_eDate||localDateStr();
   const [y,m,d]=s.split('-').map(Number);
@@ -1011,8 +1039,9 @@ function renderAcctTabs(){
 }
 function renderAcctCards(){
   const el=document.getElementById('acctList');if(!el)return;
-  el.innerHTML=S.accounts.map(a=>`<div class="acct-row" onclick="openAcctDetail('${a.id}')"><div class="acct-left"><div class="acct-ico" style="background:${a.color||'#f5f5f0'}">${a.emoji}</div><div><div class="acct-name">${a.name}</div><div class="acct-sub">${a.sub}</div></div></div><div class="acct-right"><div class="acct-amt" id="bal-${a.id}">$0.00</div><div class="acct-chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div></div>`).join('')+
-  `<div class="acct-row" onclick="openNewAcct()" style="border:1.5px dashed var(--border);background:transparent;box-shadow:none;"><div class="acct-left"><div class="acct-ico" style="background:var(--bg);font-size:22px;color:var(--muted)">＋</div><div><div class="acct-name" style="color:var(--muted)">新增帳戶</div></div></div></div>`;
+  const canDel=id=>id!=='personal'&&id!=='business';
+  el.innerHTML=S.accounts.map(a=>`<div class="acct-row" style="position:relative" onclick="${_acctManageMode?'':'openAcctDetail(\''+a.id+'\')'}"><div class="acct-left"><div class="acct-ico" style="background:${a.color||'#f5f5f0'}">${a.emoji}</div><div><div class="acct-name">${a.name}</div><div class="acct-sub">${a.sub}</div></div></div><div class="acct-right">${_acctManageMode?`<button onclick="quickDelAcct('${a.id}',event)" style="background:#fff4f4;border:none;color:var(--red);font-size:12px;font-family:var(--sora);font-weight:600;padding:6px 12px;border-radius:16px;cursor:pointer;${canDel(a.id)?'':'opacity:.3;pointer-events:none;'}">刪除</button>`:`<div class="acct-amt" id="bal-${a.id}">$0.00</div><div class="acct-chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>`}</div></div>`).join('');
+  if(!_acctManageMode)el.innerHTML+=`<div class="acct-row" onclick="openNewAcct()" style="border:1.5px dashed var(--border);background:transparent;box-shadow:none;"><div class="acct-left"><div class="acct-ico" style="background:var(--bg);font-size:22px;color:var(--muted)">＋</div><div><div class="acct-name" style="color:var(--muted)">新增帳戶</div></div></div></div>`;
 }
 
 /* ACCOUNT CRUD */
@@ -1072,6 +1101,16 @@ function delAcct(){
   S.accounts=S.accounts.filter(x=>x.id!==_editAcctId);
   saveAccounts();document.getElementById('acctMgOv').classList.remove('open');
   if(S.av===_editAcctId)setAV('all');
+  else{renderAcctTabs();renderAcctCards();updABal(S.txs);}
+  toast('帳戶已刪除','success');
+}
+function quickDelAcct(id,e){
+  e.stopPropagation();
+  if(id==='personal'||id==='business'){toast('預設帳戶不可刪除','error');return;}
+  if(!confirm('確定刪除此帳戶？相關交易不會刪除。'))return;
+  S.accounts=S.accounts.filter(x=>x.id!==id);
+  saveAccounts();
+  if(S.av===id)setAV('all');
   else{renderAcctTabs();renderAcctCards();updABal(S.txs);}
   toast('帳戶已刪除','success');
 }
