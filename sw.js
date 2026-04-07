@@ -1,4 +1,4 @@
-const VERSION = '1.0.9';
+const VERSION = '1.1.0';
 const CACHE = 'ledger-' + VERSION;
 const ASSETS = ['./index.html', './manifest.json'];
 
